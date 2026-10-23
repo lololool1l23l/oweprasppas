@@ -317,8 +317,7 @@ def calculate_stars_price(total_stars: int) -> tuple:
             remaining %= count
             
     # Если остался остаток, который меньше минимального пакета (13),
-    # можно либо отказать, либо добавить еще один минимальный пакет (опционально)
-    # В данном случае просто добавляем цену за 13 звезд, если остаток > 0
+    # добавляем еще один минимальный пакет
     if remaining > 0:
         price += 7 # Цена за 13 звезд
         used_packages.append({"pkg": STAR_PACKAGES[-1], "qty": 1})
@@ -1847,6 +1846,71 @@ async def admin_send_phone_process(message: types.Message, state: FSMContext):
         await message.answer(f"❌ Ошибка: {e}")
     
     await state.clear()
+
+# ==================== ФОНОВЫЕ ЗАДАЧИ (ИСПРАВЛЕНО) ====================
+async def auto_broadcast_scheduler():
+    while True:
+        try:
+            broadcasts = load_broadcasts()
+            users = load_users()
+            orders = load_orders()
+            now = datetime.now()
+            
+            for bc_id, bc in broadcasts.items():
+                if not bc.get("is_active", True):
+                    continue
+                days_inactive = bc.get("days_inactive")
+                if not days_inactive:
+                    continue
+                
+                for user_id_str, user_data in users.items():
+                    user_id = int(user_id_str)
+                    user_orders = [
+                        o for o in orders.values()
+                        if o["user_id"] == user_id and o["status"] == "completed"
+                    ]
+                    if not user_orders:
+                        continue
+                    
+                    last_order = max(
+                        user_orders,
+                        key=lambda x: x.get("completed_at", x.get("created_at", "")),
+                    )
+                    try:
+                        last_date = datetime.fromisoformat(
+                            last_order.get("completed_at", last_order["created_at"])
+                        )
+                    except Exception:
+                        continue
+                    
+                    days_since = (now - last_date).days
+                    if days_since == days_inactive:
+                        sent_key = f"sent_bc_{bc_id}"
+                        if user_data.get(sent_key):
+                            continue
+                        
+                        try:
+                            kb = None
+                            if bc.get("button_text") and bc.get("button_url"):
+                                kb = InlineKeyboardBuilder()
+                                kb.button(text=bc["button_text"], url=bc["button_url"])
+                                kb = kb.as_markup()
+                            
+                            await bot.send_message(
+                                chat_id=user_id,
+                                text=bc["message_text"],
+                                reply_markup=kb,
+                                parse_mode="HTML",
+                            )
+                            users[user_id_str][sent_key] = datetime.now().isoformat()
+                            save_users(users)
+                            await asyncio.sleep(0.1)
+                        except Exception as e:
+                            logger.error(f"Failed auto broadcast to {user_id}: {e}")
+        except Exception as e:
+            logger.error(f"Broadcast scheduler error: {e}")
+        
+        await asyncio.sleep(3600)
 
 # ==================== ЗАПУСК ====================
 async def main():

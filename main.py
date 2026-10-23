@@ -15,9 +15,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import (
-    ReplyKeyboardMarkup, KeyboardButton, FSInputFile, InlineKeyboardButton
-)
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, FSInputFile, InlineKeyboardButton
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from telethon import TelegramClient, events, functions
@@ -27,7 +25,7 @@ BOT_TOKEN = "8975688414:AAGUC6Ag9ADN_p7Tb0R9a8xsLEnsFHFkWZM"
 ADMIN_ID = 8543473783
 CHANNEL_ID = "-1004311525622"
 STORE_CHANNEL_ID = "-1004292126045"
-PARTNER_GROUP_ID = -5598258715  # ID группы для уведомлений о заработке партнеров
+PARTNER_GROUP_ID = -5598258715
 
 API_ID = 38387697
 API_HASH = "e8fb7f7163498eb28231e45071fe92c0"
@@ -39,17 +37,53 @@ bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTM
 dp = Dispatcher(storage=MemoryStorage())
 
 # ==================== ПРЕМИУМ ЭМОДЗИ ====================
+# ЗАМЕНИ ID НА СВОИ. Внутри текста — фолбэк-символ, чтобы не ломалось, если ID невалиден.
 EMOJI = {
-    "star":   ("5438496463044752972", "⭐"),
-    "check":  ("5206607081334906820", "✅"),
-    "fire":   ("5424972470023104089", "🔥"),
-    "money":  ("5287231198098117669", "💰"),
-    "cart":   ("5312361253610475399", "🛍"),
-    "user":   ("5190872550250405805", "👤"),
-    "gift":   ("5278467510604160626", "🎁"),
-    "time":   ("5382194935057372936", "⏱"),
-    "warn":   ("5274099962655816924", "⚠️"),
-    "box":    ("5312361253610475399", "📦"), # Используем иконку корзины для склада
+    "star":     ("5438496463044752972", "⭐"),
+    "check":    ("5206607081334906820", "✅"),
+    "fire":     ("5424972470023104089", "🔥"),
+    "money":    ("5287231198098117669", "💰"),
+    "cart":     ("5312361253610475399", "🛍"),
+    "user":     ("5190872550250405805", "👤"),
+    "gift":     ("5278467510604160626", "🎁"),
+    "time":     ("5382194935057372936", "⏱"),
+    "warn":     ("5274099962655816924", "⚠️"),
+    "box":      ("5312361253610475399", "📦"),
+    "card":     ("5287231198098117669", "💳"),
+    "key":      ("5382194935057372936", "🔑"),
+    "phone":    ("5190872550250405805", "📱"),
+    "lock":     ("5206607081334906820", "🔐"),
+    "trash":    ("5274099962655816924", "🗑"),
+    "chart":    ("5424972470023104089", "📊"),
+    "chart_up": ("5424972470023104089", "📈"),
+    "gear":     ("5274099962655816924", "⚙️"),
+    "megaphone":("5278467510604160626", "📢"),
+    "link":     ("5382194935057372936", "🔗"),
+    "save":     ("5206607081334906820", "💾"),
+    "calendar": ("5382194935057372936", "📅"),
+    "rocket":   ("5424972470023104089", "🚀"),
+    "heart":    ("5278467510604160626", "❤️"),
+    "cross":    ("5274099962655816924", "❌"),
+    "question": ("5274099962655816924", "❓"),
+    "plus":     ("5206607081334906820", "➕"),
+    "minus":    ("5274099962655816924", "➖"),
+    "refresh":  ("5382194935057372936", "🔄"),
+    "back":     ("5274099962655816924", "⬅️"),
+    "next":     ("5382194935057372936", "➡️"),
+    "trophy":   ("5438496463044752972", "🏆"),
+    "crown":    ("5438496463044752972", "👑"),
+    "diamond":  ("5438496463044752972", "💎"),
+    "medal1":   ("5438496463044752972", "🥇"),
+    "medal2":   ("5438496463044752972", "🥈"),
+    "medal3":   ("5438496463044752972", "🥉"),
+    "ticket":   ("5278467510604160626", "🎟"),
+    "chat":     ("5278467510604160626", "💬"),
+    "globe":    ("5190872550250405805", "🌍"),
+    "pin":      ("5274099962655816924", "📌"),
+    "eye":      ("5190872550250405805", "👀"),
+    "sparkle":  ("5424972470023104089", "✨"),
+    "boom":     ("5424972470023104089", "💥"),
+    "ok_hand":  ("5206607081334906820", "👌"),
 }
 
 def pe(key: str) -> str:
@@ -94,15 +128,13 @@ TEMP_DIR = "temp_sessions"
 os.makedirs(ACCOUNTS_DIR, exist_ok=True)
 os.makedirs(TEMP_DIR, exist_ok=True)
 
-# ==================== БЭКАПЫ (ENV) ====================
 BACKUP_FILES = [
     "orders", "users", "referrals", "promo_codes", "settings",
     "order_counter", "reviews", "relay_map", "requisites",
     "chat_history", "broadcasts", "traffic_sources", "promo_earnings"
 ]
 
-def get_backup_env_key(name: str) -> str:
-    return f"BACKUP_{name.upper()}_B64"
+def get_backup_env_key(name: str) -> str: return f"BACKUP_{name.upper()}_B64"
 
 def restore_from_env():
     restored = []
@@ -114,19 +146,16 @@ def restore_from_env():
         if os.path.exists(path) and os.path.getsize(path) > 2: continue
         try:
             data = base64.b64decode(value).decode("utf-8")
-            with open(path, "w", encoding="utf-8") as f:
-                f.write(data)
+            with open(path, "w", encoding="utf-8") as f: f.write(data)
             restored.append(name)
-        except Exception as e:
-            logger.error(f"Restore {name} failed: {e}")
+        except Exception as e: logger.error(f"Restore {name} failed: {e}")
     if restored: print(f"[BACKUP] Восстановлено: {', '.join(restored)}")
 
 def auto_backup_note(name: str, data: dict):
     try:
         raw = json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
-        b64 = base64.b64encode(raw).decode("ascii")
         with open(f"backup_{name}.b64", "w", encoding="utf-8") as f:
-            f.write(b64)
+            f.write(base64.b64encode(raw).decode("ascii"))
     except: pass
 
 def load_json(path):
@@ -167,7 +196,7 @@ def save_traffic_sources(t): save_json(TRAFFIC_SOURCES_FILE, t)
 def load_promo_earnings(): return load_json(PROMO_EARNINGS_FILE)
 def save_promo_earnings(e): save_json(PROMO_EARNINGS_FILE, e)
 
-# ==================== СТРАНЫ И СКЛАД ====================
+# ==================== СТРАНЫ / СКЛАД ====================
 COUNTRY_CODES = {
     "91": ("in", "🇮🇳 Индия"), "95": ("mm", "🇲🇲 Мьянма"),
     "234": ("ng", "🇳🇬 Нигерия"), "62": ("id", "🇮🇩 Индонезия"),
@@ -216,18 +245,18 @@ DEFAULT_PRICES = {
     "dc": (40, 50), "dc_nitro": (150, 200),
 }
 
-def country_dir(country: str) -> str: return os.path.join(ACCOUNTS_DIR, country)
-def session_path(country: str, name: str) -> str: return os.path.join(country_dir(country), f"{name}.session")
-def watcher_path(country: str, name: str) -> str: return os.path.join(country_dir(country), f"{name}_watcher.session")
-def meta_path(country: str, name: str) -> str: return os.path.join(country_dir(country), f"{name}.json")
+def country_dir(c): return os.path.join(ACCOUNTS_DIR, c)
+def session_path(c, n): return os.path.join(country_dir(c), f"{n}.session")
+def watcher_path(c, n): return os.path.join(country_dir(c), f"{n}_watcher.session")
+def meta_path(c, n): return os.path.join(country_dir(c), f"{n}.json")
 
-def load_meta(country: str, name: str):
-    p = meta_path(country, name)
+def load_meta(c, n):
+    p = meta_path(c, n)
     if not os.path.exists(p): return None
     with open(p, "r", encoding="utf-8") as f: return json.load(f)
 
-def save_meta(country: str, name: str, meta: dict):
-    with open(meta_path(country, name), "w", encoding="utf-8") as f:
+def save_meta(c, n, meta):
+    with open(meta_path(c, n), "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=2)
 
 async def analyze_session(session_file: str) -> dict:
@@ -236,24 +265,17 @@ async def analyze_session(session_file: str) -> dict:
     try:
         await client.connect()
         if not await client.is_user_authorized():
-            result["error"] = "NOT_AUTHORIZED"
-            return result
+            result["error"] = "NOT_AUTHORIZED"; return result
         me = await client.get_me()
         if not me:
-            result["error"] = "NO_ME"
-            return result
-        result.update({
-            "valid": True, "phone": me.phone, "user_id": me.id,
-            "first_name": me.first_name, "username": me.username,
-            "premium": getattr(me, "premium", False),
-        })
+            result["error"] = "NO_ME"; return result
+        result.update({"valid": True, "phone": me.phone, "user_id": me.id, "first_name": me.first_name, "username": me.username, "premium": getattr(me, "premium", False)})
         try:
             pwd = await client(functions.account.GetPasswordRequest())
             if getattr(pwd, "has_password", False):
                 result["has_2fa"] = True
                 result["password_hint"] = getattr(pwd, "hint", None)
-        except Exception as e:
-            logger.warning(f"2FA check failed: {e}")
+        except Exception as e: logger.warning(f"2FA check failed: {e}")
     except Exception as e:
         result["error"] = f"{type(e).__name__}: {str(e)[:100]}"
     finally:
@@ -287,33 +309,28 @@ def stock_count() -> dict:
                 if meta and meta.get("status") == "available": counts[c] += 1
     return counts
 
-def reserve_account(country: str, user_id: int):
-    avail = all_available(country)
+def reserve_account(c, uid):
+    avail = all_available(c)
     if not avail: return None
     acc = avail[0]
-    acc["status"] = "reserved"
-    acc["reserved_by"] = user_id
-    acc["reserved_at"] = datetime.now().isoformat()
-    save_meta(country, acc["session_name"], acc)
+    acc["status"] = "reserved"; acc["reserved_by"] = uid; acc["reserved_at"] = datetime.now().isoformat()
+    save_meta(c, acc["session_name"], acc)
     return acc
 
-def release_account(country: str, session_name: str):
-    meta = load_meta(country, session_name)
+def release_account(c, n):
+    meta = load_meta(c, n)
     if not meta: return
     meta["status"] = "available"
-    meta.pop("reserved_by", None)
-    meta.pop("reserved_at", None)
-    save_meta(country, session_name, meta)
+    meta.pop("reserved_by", None); meta.pop("reserved_at", None)
+    save_meta(c, n, meta)
 
-def mark_sold(country: str, session_name: str, user_id: int):
-    meta = load_meta(country, session_name)
+def mark_sold(c, n, uid):
+    meta = load_meta(c, n)
     if not meta: return
-    meta["status"] = "sold"
-    meta["sold_at"] = datetime.now().isoformat()
-    meta["sold_to"] = user_id
-    save_meta(country, session_name, meta)
+    meta["status"] = "sold"; meta["sold_at"] = datetime.now().isoformat(); meta["sold_to"] = uid
+    save_meta(c, n, meta)
 
-def get_user_accounts(user_id: int) -> list:
+def get_user_accounts(uid):
     result = []
     if not os.path.exists(ACCOUNTS_DIR): return result
     for c in os.listdir(ACCOUNTS_DIR):
@@ -322,14 +339,11 @@ def get_user_accounts(user_id: int) -> list:
         for f in os.listdir(cd):
             if f.endswith(".json"):
                 meta = load_meta(c, f.replace(".json", ""))
-                if meta and meta.get("sold_to") == user_id: result.append(meta)
+                if meta and meta.get("sold_to") == uid: result.append(meta)
     return result
 
 # ==================== ПЕРЕХВАТ КОДОВ ====================
-active_watchers = {}
-watcher_users = {}
-watcher_passwords = {}
-watcher_orders = {}
+active_watchers, watcher_users, watcher_passwords, watcher_orders = {}, {}, {}, {}
 
 async def watch_codes(session_file: str, user_id: int, password: str = None, order_key: str = None):
     session_name = os.path.basename(session_file).replace(".session", "")
@@ -343,7 +357,7 @@ async def watch_codes(session_file: str, user_id: int, password: str = None, ord
     try:
         await client.connect()
         if not await client.is_user_authorized():
-            try: await bot.send_message(user_id, f"{pe('warn')} Сессия недействительна. Напишите @MaskYoY")
+            try: await bot.send_message(user_id, f"{pe('warn')} Сессия недействительна. @MaskYoY")
             except: pass
             return
 
@@ -352,32 +366,29 @@ async def watch_codes(session_file: str, user_id: int, password: str = None, ord
             text = event.message.text or ""
             target = watcher_users.get(session_name)
             if not target: return
-
             code_match = re.search(r'\b(\d{5})\b', text)
             if code_match:
                 code = code_match.group(1)
                 pwd = watcher_passwords.get(session_name)
-                msg = f"🔑 <b>КОД ПОДТВЕРЖДЕНИЯ</b>\n\n<code>{code}</code>\n\n"
-                if pwd: msg += f"🔐 <b>Пароль (2FA):</b> <code>{pwd}</code>\n\n"
+                msg = f"{pe('key')} <b>КОД ПОДТВЕРЖДЕНИЯ</b>\n\n<code>{code}</code>\n\n"
+                if pwd: msg += f"{pe('lock')} <b>Пароль (2FA):</b> <code>{pwd}</code>\n\n"
                 msg += "Введите код в Telegram сейчас же!"
-                try: await bot.send_message(target, msg, parse_mode="HTML")
+                try: await bot.send_message(target, msg)
                 except Exception as e: logger.error(f"Send code error: {e}")
                 return
 
             low = text.lower()
-            login_signals = ["новый вход", "new login", "вы вошли", "you have logged in", "новое устройство", "new device"]
-            if any(sig in low for sig in login_signals):
+            if any(s in low for s in ["новый вход", "new login", "вы вошли", "you have logged in", "новое устройство", "new device"]):
                 order_key_local = watcher_orders.get(session_name)
                 try:
                     kb = InlineKeyboardBuilder()
-                    if order_key_local:
-                        ibtn(kb, "Оставить отзыв", callback_data=f"leave_review_{order_key_local}", icon_key="star", style="success")
+                    if order_key_local: ibtn(kb, "Оставить отзыв", callback_data=f"leave_review_{order_key_local}", icon_key="star", style="success")
                     ibtn(kb, "Мои аккаунты", callback_data="my_accounts", icon_key="box")
                     kb.adjust(1)
                     await bot.send_message(target,
                         f"{pe('check')} <b>ВХОД ПОДТВЕРЖДЁН!</b>\n\n"
-                        f"📱 Сессия: <code>{session_name}</code>\n"
-                        f"🎉 Аккаунт успешно вошёл.\n\n"
+                        f"{pe('phone')} Сессия: <code>{session_name}</code>\n"
+                        f"{pe('sparkle')} Аккаунт успешно вошёл.\n\n"
                         f"Пожалуйста, оставь отзыв!",
                         reply_markup=kb.as_markup())
                 except Exception as e: logger.error(f"Login notify error: {e}")
@@ -385,8 +396,8 @@ async def watch_codes(session_file: str, user_id: int, password: str = None, ord
                 try:
                     await bot.send_message(ADMIN_ID,
                         f"{pe('check')} <b>ПОКУПАТЕЛЬ ВОШЁЛ В АККАУНТ</b>\n\n"
-                        f"👤 User ID: <code>{target}</code>\n"
-                        f"📱 Сессия: <code>{session_name}</code>\n"
+                        f"{pe('user')} User ID: <code>{target}</code>\n"
+                        f"{pe('phone')} Сессия: <code>{session_name}</code>\n"
                         f"🆔 Заказ: <code>{order_key_local or '—'}</code>")
                 except: pass
 
@@ -410,18 +421,16 @@ async def watch_codes(session_file: str, user_id: int, password: str = None, ord
     finally:
         active_watchers.pop(session_name, None)
 
-async def start_code_watcher(country: str, session_name: str, user_id: int, order_key: str = None):
-    meta = load_meta(country, session_name)
+async def start_code_watcher(c, n, uid, order_key=None):
+    meta = load_meta(c, n)
     pwd = meta.get("password") if meta else None
-    sess = watcher_path(country, session_name)
-    if not os.path.exists(sess): sess = session_path(country, session_name)
-    await watch_codes(sess, user_id, pwd, order_key)
+    sess = watcher_path(c, n)
+    if not os.path.exists(sess): sess = session_path(c, n)
+    await watch_codes(sess, uid, pwd, order_key)
 
 # ==================== НАСТРОЙКИ ====================
 DEFAULT_SETTINGS = {
-    "referral_bonus_percent": 5.0,
-    "partner_commission_percent": 20.0,
-    "partner_discount_percent": 10.0,
+    "referral_bonus_percent": 5.0, "partner_commission_percent": 20.0, "partner_discount_percent": 10.0,
     "level_bronze_min": 0, "level_bronze_discount": 0,
     "level_silver_min": 500, "level_silver_discount": 3,
     "level_gold_min": 1500, "level_gold_discount": 5,
@@ -431,23 +440,17 @@ DEFAULT_SETTINGS = {
 if not os.path.exists(SETTINGS_FILE): save_settings(DEFAULT_SETTINGS)
 
 def get_setting(key, default=None):
-    s = load_settings()
-    return s.get(key, DEFAULT_SETTINGS.get(key, default))
+    return load_settings().get(key, DEFAULT_SETTINGS.get(key, default))
 
 LEVEL_KEYS = {"bronze": "Бронза", "silver": "Серебро", "gold": "Золото", "platinum": "Платина", "vip": "VIP"}
 
 # ==================== ПОЛЬЗОВАТЕЛИ ====================
 async def add_user(user_id, username=None, full_name=None, ref_code=None):
-    users = load_users()
-    referrals = load_referrals()
-    key = str(user_id)
-    is_new = key not in users
-
+    users = load_users(); referrals = load_referrals(); key = str(user_id); is_new = key not in users
     if is_new:
         users[key] = {
             "user_id": user_id, "username": username, "full_name": full_name,
-            "first_seen": datetime.now().isoformat(),
-            "last_active": datetime.now().isoformat(),
+            "first_seen": datetime.now().isoformat(), "last_active": datetime.now().isoformat(),
             "referred_by": None, "referral_code": None,
             "total_spent": 0.0, "orders_count": 0, "traffic_source": None,
         }
@@ -456,27 +459,19 @@ async def add_user(user_id, username=None, full_name=None, ref_code=None):
             for rid, rdata in referrals.items():
                 if rdata.get("referral_code") == actual:
                     users[key]["referred_by"] = int(rid)
-                    rdata.setdefault("referrals_list", []).append({
-                        "user_id": user_id, "username": username,
-                        "date": datetime.now().isoformat(),
-                        "first_purchase_done": False,
-                    })
+                    rdata.setdefault("referrals_list", []).append({"user_id": user_id, "username": username, "date": datetime.now().isoformat(), "first_purchase_done": False})
                     break
         if ref_code and not ref_code.startswith("ref_"):
             users[key]["traffic_source"] = ref_code
             sources = load_traffic_sources()
-            if ref_code not in sources:
-                sources[ref_code] = {"total_visits": 0, "total_registrations": 0, "total_purchases": 0, "total_revenue": 0.0, "created_at": datetime.now().isoformat()}
-            sources[ref_code]["total_visits"] += 1
-            sources[ref_code]["total_registrations"] += 1
+            if ref_code not in sources: sources[ref_code] = {"total_visits": 0, "total_registrations": 0, "total_purchases": 0, "total_revenue": 0.0, "created_at": datetime.now().isoformat()}
+            sources[ref_code]["total_visits"] += 1; sources[ref_code]["total_registrations"] += 1
             save_traffic_sources(sources)
         own_code = hashlib.md5(f"{user_id}_ref_salt".encode()).hexdigest()[:8].upper()
         users[key]["referral_code"] = own_code
         referrals.setdefault(key, {"user_id": user_id, "referral_code": own_code, "referrals_list": [], "total_earned": 0.0})
-        save_referrals(referrals)
-        save_users(users)
+        save_referrals(referrals); save_users(users)
         return True
-
     users[key]["last_active"] = datetime.now().isoformat()
     if username: users[key]["username"] = username
     if full_name: users[key]["full_name"] = full_name
@@ -485,19 +480,17 @@ async def add_user(user_id, username=None, full_name=None, ref_code=None):
         own_code = hashlib.md5(f"{user_id}_ref_salt".encode()).hexdigest()[:8].upper()
         users[key]["referral_code"] = own_code
     referrals.setdefault(key, {"user_id": user_id, "referral_code": own_code, "referrals_list": [], "total_earned": 0.0})
-    save_referrals(referrals)
-    save_users(users)
+    save_referrals(referrals); save_users(users)
     return False
 
 DEFAULT_REQUISITES = {
-    "uah": f"{pe('money')} Карта Моно: 4874 0700 2513 7454\n\n{pe('gift')} Подарок в ЛС: @MaskYoY",
-    "gift": f"{pe('gift')} Подарок в ЛС: @MaskYoY",
+    "uah": f"{pe('money')} <b>Карта Моно:</b> <code>4874 0700 2513 7454</code>\n\n{pe('gift')} <b>Подарок в ЛС:</b> @MaskYoY",
+    "gift": f"{pe('gift')} <b>Подарок в ЛС:</b> @MaskYoY",
 }
 if not os.path.exists(REQUISITES_FILE): save_requisites(DEFAULT_REQUISITES)
 
-def get_requisites(method):
-    req = load_requisites()
-    return req.get(method, DEFAULT_REQUISITES.get(method, "Уточните у продавца"))
+def get_requisites(m):
+    return load_requisites().get(m, DEFAULT_REQUISITES.get(m, "Уточните у продавца"))
 
 # ==================== КАТАЛОГ ====================
 CATEGORIES = {
@@ -523,7 +516,7 @@ CATEGORIES = {
         },
     },
     "physical": {
-        "name": "☎️ ФИЗ НОМЕРА",
+        "name": f"{pe('phone')} ФИЗ НОМЕРА",
         "products": {
             "🇺🇸 США (+1)":            {"uah": 150, "code": "us"},
             "🇺🇦 Украина (+380)":      {"uah": 200, "code": "ua"},
@@ -537,32 +530,32 @@ CATEGORIES = {
         },
     },
     "tiktok": {
-        "name": f"📱 TIKTOK",
+        "name": f"{pe('fire')} TIKTOK",
         "products": {
-            "Обычный TikTok":        {"uah": 50,  "code": "tt"},
-            "TikTok с эфирами":      {"uah": 240, "code": "tt_live"},
+            "Обычный TikTok":   {"uah": 50,  "code": "tt"},
+            "TikTok с эфирами": {"uah": 240, "code": "tt_live"},
         },
     },
     "discord": {
-        "name": f"💬 DISCORD",
+        "name": f"{pe('chat')} DISCORD",
         "products": {
-            "Новый Discord":         {"uah": 40,  "code": "dc"},
-            "Discord с Nitro":       {"uah": 150, "code": "dc_nitro"},
+            "Новый Discord":   {"uah": 40,  "code": "dc"},
+            "Discord с Nitro": {"uah": 150, "code": "dc_nitro"},
         },
     },
     "stars": {
         "name": f"{pe('star')} ЗВЁЗДЫ",
         "products": {
-            "13 звезд":   {"uah": 7,   "code": "st13"},
-            "21 звезда":  {"uah": 15,  "code": "st21"},
-            "43 звезды":  {"uah": 35,  "code": "st43"},
-            "85 звезд":   {"uah": 60,  "code": "st85"},
-            "98 звезд":   {"uah": 70,  "code": "st98"},
-            "106 звезд":  {"uah": 75,  "code": "st106"},
-            "128 звезд":  {"uah": 80,  "code": "st128"},
-            "170 звезд":  {"uah": 130, "code": "st170"},
+            "13 звезд":  {"uah": 7,   "code": "st13"},
+            "21 звезда": {"uah": 15,  "code": "st21"},
+            "43 звезды": {"uah": 35,  "code": "st43"},
+            "85 звезд":  {"uah": 60,  "code": "st85"},
+            "98 звезд":  {"uah": 70,  "code": "st98"},
+            "106 звезд": {"uah": 75,  "code": "st106"},
+            "128 звезд": {"uah": 80,  "code": "st128"},
+            "170 звезд": {"uah": 130, "code": "st170"},
         },
-    }
+    },
 }
 
 # ==================== FSM ====================
@@ -620,49 +613,41 @@ def method_label(m): return {"uah": f"{pe('money')} Гривны", "gift": f"{pe
 def method_symbol(m): return {"uah": "₴", "gift": "🎁"}.get(m, "")
 
 def generate_short_order_id():
-    counter = load_order_counter()
-    current = counter.get("current", 0)
-    new_id = current + 1
-    counter["current"] = new_id
-    save_order_counter(counter)
-    return f"#{new_id:06d}"
+    c = load_order_counter(); cur = c.get("current", 0) + 1
+    c["current"] = cur; save_order_counter(c)
+    return f"#{cur:06d}"
 
-def find_order_key(orders, order_id):
-    if not order_id: return None
-    order_id = str(order_id).strip()
-    if order_id in orders: return order_id
-    clean = order_id.replace("#", "").strip()
-    for key, order in orders.items():
-        if str(key).replace("#", "").strip() == clean: return key
-        if str(order.get("short_id", "")).replace("#", "").strip() == clean: return key
+def find_order_key(orders, oid):
+    if not oid: return None
+    oid = str(oid).strip()
+    if oid in orders: return oid
+    clean = oid.replace("#", "").strip()
+    for k, o in orders.items():
+        if str(k).replace("#", "").strip() == clean: return k
+        if str(o.get("short_id", "")).replace("#", "").strip() == clean: return k
     return None
 
-def get_user_level(user_id):
-    users = load_users()
-    user = users.get(str(user_id), {})
-    total_spent = user.get("total_spent", 0)
+def get_user_level(uid):
+    users = load_users(); user = users.get(str(uid), {}); spent = user.get("total_spent", 0)
     levels = [
-        ("VIP", get_setting("level_vip_min", 5000), get_setting("level_vip_discount", 10), "👑"),
-        ("Платина", get_setting("level_platinum_min", 3000), get_setting("level_platinum_discount", 7), "💎"),
-        ("Золото", get_setting("level_gold_min", 1500), get_setting("level_gold_discount", 5), "🥇"),
-        ("Серебро", get_setting("level_silver_min", 500), get_setting("level_silver_discount", 3), "🥈"),
-        ("Бронза", get_setting("level_bronze_min", 0), get_setting("level_bronze_discount", 0), "🥉"),
+        ("VIP", get_setting("level_vip_min", 5000), get_setting("level_vip_discount", 10), "crown"),
+        ("Платина", get_setting("level_platinum_min", 3000), get_setting("level_platinum_discount", 7), "diamond"),
+        ("Золото", get_setting("level_gold_min", 1500), get_setting("level_gold_discount", 5), "medal1"),
+        ("Серебро", get_setting("level_silver_min", 500), get_setting("level_silver_discount", 3), "medal2"),
+        ("Бронза", get_setting("level_bronze_min", 0), get_setting("level_bronze_discount", 0), "medal3"),
     ]
-    for name, min_spent, discount, emoji in levels:
-        if total_spent >= min_spent: return {"name": name, "discount": discount, "emoji": emoji, "min_spent": min_spent}
-    return {"name": "Бронза", "discount": 0, "emoji": "🥉", "min_spent": 0}
+    for name, mn, d, ek in levels:
+        if spent >= mn: return {"name": name, "discount": d, "emoji": pe(ek), "min_spent": mn}
+    return {"name": "Бронза", "discount": 0, "emoji": pe("medal3"), "min_spent": 0}
 
 async def process_referral_bonus(referrer_id, referred_id, order_total):
     try: order_total = float(order_total)
     except: return
     if order_total <= 0: return
-    referrals = load_referrals()
-    rkey = str(referrer_id)
+    referrals = load_referrals(); rkey = str(referrer_id)
     if rkey not in referrals: return
-    rdata = referrals[rkey]
-    rdata.setdefault("referrals_list", [])
-    users = load_users()
-    referred = users.get(str(referred_id), {})
+    rdata = referrals[rkey]; rdata.setdefault("referrals_list", [])
+    users = load_users(); referred = users.get(str(referred_id), {})
     if referred.get("orders_count", 0) > 1: return
     for ref in rdata["referrals_list"]:
         if ref.get("user_id") == referred_id and ref.get("bonus_promo_code"): return
@@ -675,56 +660,54 @@ async def process_referral_bonus(referrer_id, referred_id, order_total):
         "code": code, "discount_type": "fixed", "discount_value": bonus_amount,
         "max_uses": 1, "current_uses": 0,
         "expires_at": (datetime.now() + timedelta(days=30)).isoformat(),
-        "is_active": True, "created_at": datetime.now().isoformat(),
-        "owner_id": referrer_id,
+        "is_active": True, "created_at": datetime.now().isoformat(), "owner_id": referrer_id,
     }
     save_promo_codes(promo_codes)
     for ref in rdata["referrals_list"]:
         if ref.get("user_id") == referred_id:
-            ref["first_purchase_done"] = True
-            ref["bonus_amount"] = bonus_amount
-            ref["bonus_promo_code"] = code
+            ref["first_purchase_done"] = True; ref["bonus_amount"] = bonus_amount; ref["bonus_promo_code"] = code
             break
     rdata["total_earned"] = rdata.get("total_earned", 0) + bonus_amount
     save_referrals(referrals)
-    try:
-        await bot.send_message(referrer_id, f"{pe('gift')} Реферальный бонус!\nСумма: {bonus_amount:.2f} грн\nПромокод: <code>{code}</code>")
+    try: await bot.send_message(referrer_id, f"{pe('gift')} <b>Реферальный бонус!</b>\nСумма: {bonus_amount:.2f} грн\nПромокод: <code>{code}</code>")
     except: pass
 
-async def check_subscription(user_id):
+async def check_subscription(uid):
     try:
-        member = await bot.get_chat_member(chat_id=STORE_CHANNEL_ID, user_id=user_id)
-        return member.status in ["member", "administrator", "creator"]
+        m = await bot.get_chat_member(chat_id=STORE_CHANNEL_ID, user_id=uid)
+        return m.status in ["member", "administrator", "creator"]
     except: return False
 
 # ==================== КЛАВИАТУРЫ ====================
+# ВНИМАНИЕ: Reply-кнопки НЕ поддерживают style и icon_custom_emoji_id (ограничение Bot API).
+# Тут только Unicode-эмодзи. Цветными могут быть только inline-кнопки.
+
 def get_main_reply_keyboard():
     b = ReplyKeyboardBuilder()
-    b.row(KeyboardButton(text="🛍 Каталог"), KeyboardButton(text="💬 Отзывы"))
-    b.row(KeyboardButton(text="📋 Мои заказы"), KeyboardButton(text="📦 Мои аккаунты"))
-    b.row(KeyboardButton(text="❓ Частые вопросы"), KeyboardButton(text="📢 Наш Канал"))
-    b.row(KeyboardButton(text="👤 Профиль"), KeyboardButton(text="👥 Рефералы"))
-    b.row(KeyboardButton(text="🎟 Промокод"))
+    b.row(KeyboardButton(text=f"{EMOJI['cart'][1]} Каталог"), KeyboardButton(text=f"{EMOJI['chat'][1]} Отзывы"))
+    b.row(KeyboardButton(text=f"{EMOJI['cart'][1]} Мои заказы"), KeyboardButton(text=f"{EMOJI['box'][1]} Мои аккаунты"))
+    b.row(KeyboardButton(text=f"{EMOJI['question'][1]} Частые вопросы"), KeyboardButton(text=f"{EMOJI['megaphone'][1]} Наш Канал"))
+    b.row(KeyboardButton(text=f"{EMOJI['user'][1]} Профиль"), KeyboardButton(text=f"{EMOJI['gift'][1]} Рефералы"))
+    b.row(KeyboardButton(text=f"{EMOJI['ticket'][1]} Промокод"))
     return b.as_markup(resize_keyboard=True)
 
 def get_admin_reply_keyboard():
     b = ReplyKeyboardBuilder()
-    b.row(KeyboardButton(text="📊 Статистика"), KeyboardButton(text="📋 Все заказы"))
-    b.row(KeyboardButton(text="⏳ Ожидают оплаты"), KeyboardButton(text="✅ Выполненные"))
-    b.row(KeyboardButton(text="📦 Склад"), KeyboardButton(text="💰 Реквизиты"))
-    b.row(KeyboardButton(text="📢 Рассылка"), KeyboardButton(text="👤 Пользователи"))
-    b.row(KeyboardButton(text="📈 Панель управления"), KeyboardButton(text="🏠 Главное меню"))
-    b.row(KeyboardButton(text="🎟 Промокоды"), KeyboardButton(text="⭐ Уровни"))
-    b.row(KeyboardButton(text="👥 Рефералы"), KeyboardButton(text="📊 Аналитика"))
-    b.row(KeyboardButton(text="🔗 Источники"), KeyboardButton(text="💾 Бэкапы"))
+    b.row(KeyboardButton(text=f"{EMOJI['chart'][1]} Статистика"), KeyboardButton(text=f"{EMOJI['cart'][1]} Все заказы"))
+    b.row(KeyboardButton(text=f"{EMOJI['time'][1]} Ожидают оплаты"), KeyboardButton(text=f"{EMOJI['check'][1]} Выполненные"))
+    b.row(KeyboardButton(text=f"{EMOJI['box'][1]} Склад"), KeyboardButton(text=f"{EMOJI['money'][1]} Реквизиты"))
+    b.row(KeyboardButton(text=f"{EMOJI['megaphone'][1]} Рассылка"), KeyboardButton(text=f"{EMOJI['user'][1]} Пользователи"))
+    b.row(KeyboardButton(text=f"{EMOJI['chart_up'][1]} Панель управления"), KeyboardButton(text="🏠 Главное меню"))
+    b.row(KeyboardButton(text=f"{EMOJI['ticket'][1]} Промокоды"), KeyboardButton(text=f"{EMOJI['star'][1]} Уровни"))
+    b.row(KeyboardButton(text=f"{EMOJI['gift'][1]} Рефералы"), KeyboardButton(text=f"{EMOJI['chart'][1]} Аналитика"))
+    b.row(KeyboardButton(text=f"{EMOJI['link'][1]} Источники"), KeyboardButton(text=f"{EMOJI['save'][1]} Бэкапы"))
     return b.as_markup(resize_keyboard=True)
 
 def subscribe_keyboard():
     kb = InlineKeyboardBuilder()
-    ibtn(kb, "Подписаться", url="http://t.me/owerpass_store", style="primary")
+    ibtn(kb, "Подписаться", url="http://t.me/owerpass_store", icon_key="megaphone", style="primary")
     ibtn(kb, "Я подписался", callback_data="check_sub", icon_key="check", style="success")
-    kb.adjust(1)
-    return kb.as_markup()
+    kb.adjust(1); return kb.as_markup()
 
 def main_menu_keyboard():
     kb = InlineKeyboardBuilder()
@@ -734,128 +717,113 @@ def main_menu_keyboard():
     ibtn(kb, "Отзывы", callback_data="menu_reviews", icon_key="star")
     ibtn(kb, "Профиль", callback_data="profile_menu", icon_key="user")
     ibtn(kb, "Рефералы", callback_data="referral_menu", icon_key="gift")
-    ibtn(kb, "Промокод", callback_data="promo_menu")
-    ibtn(kb, "Наш Канал", url="http://t.me/owerpass_store", style="primary")
-    kb.adjust(2, 2, 2, 2)
-    return kb.as_markup()
+    ibtn(kb, "Промокод", callback_data="promo_menu", icon_key="ticket")
+    ibtn(kb, "Наш Канал", url="http://t.me/owerpass_store", icon_key="megaphone", style="primary")
+    kb.adjust(2, 2, 2, 2); return kb.as_markup()
 
 def catalog_keyboard():
     kb = InlineKeyboardBuilder()
-    for k, v in CATEGORIES.items():
-        ibtn(kb, v["name"], callback_data=f"cat_{k}", icon_key="cart")
-    ibtn(kb, "Назад", callback_data="main_menu", icon_key="warn", style="danger")
-    kb.adjust(1)
-    return kb.as_markup()
+    ibtn(kb, "Обычные номера", callback_data="cat_regular", icon_key="cart", style="primary")
+    ibtn(kb, "Физ номера", callback_data="cat_physical", icon_key="phone", style="primary")
+    ibtn(kb, "TikTok", callback_data="cat_tiktok", icon_key="fire", style="primary")
+    ibtn(kb, "Discord", callback_data="cat_discord", icon_key="chat", style="primary")
+    ibtn(kb, "Звёзды", callback_data="cat_stars", icon_key="star", style="primary")
+    ibtn(kb, "Назад", callback_data="main_menu", icon_key="back", style="danger")
+    kb.adjust(1); return kb.as_markup()
 
 def category_products_keyboard(category):
     kb = InlineKeyboardBuilder()
     counts = stock_count()
-    for product_name, price_data in CATEGORIES[category]["products"].items():
-        code = price_data.get("code", "")
+    for pname, pdata in CATEGORIES[category]["products"].items():
+        code = pdata.get("code", "")
         in_stock = counts.get(code, 0) if category not in ("stars", "tiktok", "discord") else 999
-        
         if in_stock > 0:
-            display = f"{product_name} — {in_stock} шт. | {price_data['uah']}₴"
-            cb = f"product_{category}_{code}"
-            ibtn(kb, display, callback_data=cb, icon_key="fire" if "stars" in category else None)
+            display = f"{pname} — {in_stock} шт. | {pdata['uah']}₴"
+            ibtn(kb, display, callback_data=f"product_{category}_{code}", icon_key="fire" if category == "stars" else None)
         else:
-            display = f"❌ {product_name} — НЕТ"
-            ibtn(kb, display, callback_data="out_of_stock", style="danger")
-    ibtn(kb, "В каталог", callback_data="menu_catalog", icon_key="warn", style="danger")
-    kb.adjust(1)
-    return kb.as_markup()
+            ibtn(kb, f"❌ {pname} — НЕТ", callback_data="out_of_stock", icon_key="cross", style="danger")
+    ibtn(kb, "В каталог", callback_data="menu_catalog", icon_key="back", style="danger")
+    kb.adjust(1); return kb.as_markup()
 
 def quantity_keyboard():
     kb = InlineKeyboardBuilder()
     for i in range(1, 6):
         kb.button(text=f"{i} шт.", callback_data=f"qty_{i}")
-    ibtn(kb, "Отмена", callback_data="main_menu", icon_key="warn", style="danger")
-    kb.adjust(5, 1)
-    return kb.as_markup()
+    ibtn(kb, "Отмена", callback_data="main_menu", icon_key="cross", style="danger")
+    kb.adjust(5, 1); return kb.as_markup()
 
 def confirm_order_keyboard():
     kb = InlineKeyboardBuilder()
     ibtn(kb, "Подтвердить", callback_data="confirm_order", icon_key="check", style="success")
-    ibtn(kb, "Отмена", callback_data="main_menu", icon_key="warn", style="danger")
-    kb.adjust(1)
-    return kb.as_markup()
+    ibtn(kb, "Отмена", callback_data="main_menu", icon_key="cross", style="danger")
+    kb.adjust(1); return kb.as_markup()
 
 def awaiting_payment_keyboard(order_id):
     kb = InlineKeyboardBuilder()
-    ibtn(kb, "Написать продавцу", url="https://t.me/MaskYoY", style="primary")
+    ibtn(kb, "Написать продавцу", url="https://t.me/MaskYoY", icon_key="chat", style="primary")
     ibtn(kb, "Написать в боте", callback_data=f"support_{order_id}", icon_key="warn")
     ibtn(kb, "Мои заказы", callback_data="my_orders", icon_key="cart")
-    kb.adjust(1)
-    return kb.as_markup()
+    kb.adjust(1); return kb.as_markup()
 
 def user_order_actions_keyboard(order_id):
     kb = InlineKeyboardBuilder()
-    ibtn(kb, "Запросить код", callback_data=f"request_code_{order_id}", icon_key="time", style="primary")
+    ibtn(kb, "Запросить код", callback_data=f"request_code_{order_id}", icon_key="key", style="primary")
     ibtn(kb, "Оставить отзыв", callback_data=f"leave_review_{order_id}", icon_key="star", style="success")
-    ibtn(kb, "Запросить замену", callback_data=f"user_replace_{order_id}")
-    ibtn(kb, "Запросить возврат", callback_data=f"user_refund_{order_id}", style="danger")
+    ibtn(kb, "Запросить замену", callback_data=f"user_replace_{order_id}", icon_key="refresh")
+    ibtn(kb, "Запросить возврат", callback_data=f"user_refund_{order_id}", icon_key="money", style="danger")
     ibtn(kb, "Все заказы", callback_data="my_orders", icon_key="cart")
-    kb.adjust(1)
-    return kb.as_markup()
+    kb.adjust(1); return kb.as_markup()
 
 def reviews_keyboard():
     kb = InlineKeyboardBuilder()
     ibtn(kb, "Посмотреть отзывы", url="https://t.me/owerpass_repa", icon_key="star", style="primary")
-    ibtn(kb, "Назад", callback_data="main_menu", icon_key="warn", style="danger")
-    kb.adjust(1)
-    return kb.as_markup()
+    ibtn(kb, "Назад", callback_data="main_menu", icon_key="back", style="danger")
+    kb.adjust(1); return kb.as_markup()
 
 def stars_keyboard():
     kb = InlineKeyboardBuilder()
     for i in range(1, 6):
         ibtn(kb, f"{i} ⭐", callback_data=f"stars_{i}", icon_key="star")
-    kb.adjust(5)
-    return kb.as_markup()
+    kb.adjust(5); return kb.as_markup()
 
 def review_photo_skip_keyboard():
     kb = InlineKeyboardBuilder()
     ibtn(kb, "Пропустить фото", callback_data="skip_photo", icon_key="check", style="primary")
-    ibtn(kb, "Отмена", callback_data="main_menu", icon_key="warn", style="danger")
-    kb.adjust(1)
-    return kb.as_markup()
+    ibtn(kb, "Отмена", callback_data="main_menu", icon_key="cross", style="danger")
+    kb.adjust(1); return kb.as_markup()
 
 def moderation_keyboard(review_id):
     kb = InlineKeyboardBuilder()
     ibtn(kb, "Одобрить", callback_data=f"approve_{review_id}", icon_key="check", style="success")
-    ibtn(kb, "Отклонить", callback_data=f"reject_{review_id}", icon_key="warn", style="danger")
-    kb.adjust(2)
-    return kb.as_markup()
+    ibtn(kb, "Отклонить", callback_data=f"reject_{review_id}", icon_key="cross", style="danger")
+    kb.adjust(2); return kb.as_markup()
 
 def profile_keyboard():
     kb = InlineKeyboardBuilder()
     ibtn(kb, "Мои аккаунты", callback_data="my_accounts", icon_key="box")
     ibtn(kb, "Рефералы", callback_data="referral_menu", icon_key="gift")
     ibtn(kb, "Мои заказы", callback_data="my_orders", icon_key="cart")
-    ibtn(kb, "Главное меню", callback_data="main_menu", icon_key="warn", style="danger")
-    kb.adjust(1)
-    return kb.as_markup()
+    ibtn(kb, "Главное меню", callback_data="main_menu", icon_key="back", style="danger")
+    kb.adjust(1); return kb.as_markup()
 
 def referral_menu_keyboard():
     kb = InlineKeyboardBuilder()
-    ibtn(kb, "Моя статистика", callback_data="referral_stats", icon_key="star")
-    ibtn(kb, "Назад", callback_data="profile_menu", icon_key="warn", style="danger")
-    kb.adjust(1)
-    return kb.as_markup()
+    ibtn(kb, "Моя статистика", callback_data="referral_stats", icon_key="chart")
+    ibtn(kb, "Назад", callback_data="profile_menu", icon_key="back", style="danger")
+    kb.adjust(1); return kb.as_markup()
 
 def requisites_edit_keyboard():
     kb = InlineKeyboardBuilder()
     ibtn(kb, "Изменить гривны", callback_data="edit_req_uah", icon_key="money")
     ibtn(kb, "Изменить подарок", callback_data="edit_req_gift", icon_key="gift")
-    kb.adjust(1)
-    return kb.as_markup()
+    kb.adjust(1); return kb.as_markup()
 
 def admin_stock_menu_keyboard():
     kb = InlineKeyboardBuilder()
     ibtn(kb, "Загрузить .session", callback_data="admin_upload_session", icon_key="box", style="primary")
     ibtn(kb, "Все аккаунты", callback_data="admin_list_accounts", icon_key="cart")
-    ibtn(kb, "Назад", callback_data="admin_dashboard_refresh", icon_key="warn", style="danger")
-    kb.adjust(1)
-    return kb.as_markup()
+    ibtn(kb, "Назад", callback_data="admin_dashboard_refresh", icon_key="back", style="danger")
+    kb.adjust(1); return kb.as_markup()
 
 def admin_order_card_keyboard(order_id, status, user_id):
     kb = InlineKeyboardBuilder()
@@ -863,12 +831,11 @@ def admin_order_card_keyboard(order_id, status, user_id):
         ibtn(kb, "Подтвердить оплату и выдать", callback_data=f"admin_confirm_payment_{order_id}", icon_key="check", style="success")
     elif status == "completed":
         ibtn(kb, "Возврат", callback_data=f"admin_refund_{order_id}", icon_key="money", style="danger")
-    ibtn(kb, "Написать покупателю", callback_data=f"admin_chat_with_user_{order_id}", icon_key="user")
-    ibtn(kb, "Отменить", callback_data=f"admin_reject_{order_id}", icon_key="warn", style="danger")
-    ibtn(kb, "Назад", callback_data="admin_back_to_list", icon_key="warn", style="danger")
-    ibtn(kb, "Обновить", callback_data=f"admin_order_detail_{order_id}", icon_key="time")
-    kb.adjust(1)
-    return kb.as_markup()
+    ibtn(kb, "Написать покупателю", callback_data=f"admin_chat_with_user_{order_id}", icon_key="chat")
+    ibtn(kb, "Отменить", callback_data=f"admin_reject_{order_id}", icon_key="cross", style="danger")
+    ibtn(kb, "Назад", callback_data="admin_back_to_list", icon_key="back", style="danger")
+    ibtn(kb, "Обновить", callback_data=f"admin_order_detail_{order_id}", icon_key="refresh")
+    kb.adjust(1); return kb.as_markup()
 
 def admin_all_orders_keyboard(page=0, per_page=5, status_filter=None):
     kb = InlineKeyboardBuilder()
@@ -876,81 +843,67 @@ def admin_all_orders_keyboard(page=0, per_page=5, status_filter=None):
     filtered = {k: v for k, v in orders.items() if (not status_filter or v["status"] == status_filter)}
     order_list = sorted(filtered.items(), reverse=True)
     total_pages = (len(order_list) + per_page - 1) // per_page
-
     if total_pages == 0:
-        ibtn(kb, "Обновить", callback_data="admin_page_0", icon_key="time")
-        kb.adjust(1)
-        return kb.as_markup()
-
-    start = page * per_page
-    end = start + per_page
+        ibtn(kb, "Обновить", callback_data="admin_page_0", icon_key="refresh")
+        kb.adjust(1); return kb.as_markup()
+    start = page * per_page; end = start + per_page
     for oid, order in order_list[start:end]:
-        emoji, _ = STATUS_CONFIG.get(order["status"], ("❓", ""))
-        symbol = method_symbol(order.get("payment_method", "uah"))
+        sym = method_symbol(order.get("payment_method", "uah"))
         short_id = order.get("short_id", oid[:8])
-        total = order["total"] if isinstance(order["total"], str) else f"{order['total']}{symbol}"
+        total = order["total"] if isinstance(order["total"], str) else f"{order['total']}{sym}"
         ibtn(kb, f"{short_id} | {order['product'][:15]} | {total}", callback_data=f"admin_order_detail_{oid}")
-
     if total_pages > 1:
-        if page > 0: kb.button(text="⬅️", callback_data=f"admin_page_{page - 1}")
-        if page < total_pages - 1: kb.button(text="➡️", callback_data=f"admin_page_{page + 1}")
-
-    ibtn(kb, "Обновить", callback_data=f"admin_page_{page}", icon_key="time")
-    kb.adjust(1)
-    return kb.as_markup()
+        if page > 0: ibtn(kb, "Назад", callback_data=f"admin_page_{page - 1}", icon_key="back")
+        if page < total_pages - 1: ibtn(kb, "Вперёд", callback_data=f"admin_page_{page + 1}", icon_key="next")
+    ibtn(kb, "Обновить", callback_data=f"admin_page_{page}", icon_key="refresh")
+    kb.adjust(1); return kb.as_markup()
 
 def admin_dashboard_keyboard():
     kb = InlineKeyboardBuilder()
     ibtn(kb, "Заказы", callback_data="admin_orders_dashboard", icon_key="cart")
     ibtn(kb, "Склад", callback_data="admin_stock_menu", icon_key="box")
     ibtn(kb, "Рефералы", callback_data="admin_referrals_dashboard", icon_key="gift")
-    ibtn(kb, "Промокоды", callback_data="admin_promo_dashboard")
+    ibtn(kb, "Промокоды", callback_data="admin_promo_dashboard", icon_key="ticket")
     ibtn(kb, "Уровни", callback_data="admin_levels_dashboard", icon_key="star")
-    ibtn(kb, "Аналитика", callback_data="admin_analytics_dashboard")
-    ibtn(kb, "Источники", callback_data="admin_traffic_dashboard")
-    ibtn(kb, "Бэкапы", callback_data="admin_backups", icon_key="money")
-    ibtn(kb, "Обновить", callback_data="admin_dashboard_refresh", icon_key="time")
-    kb.adjust(2, 2, 2, 2, 1)
-    return kb.as_markup()
+    ibtn(kb, "Аналитика", callback_data="admin_analytics_dashboard", icon_key="chart_up")
+    ibtn(kb, "Источники", callback_data="admin_traffic_dashboard", icon_key="link")
+    ibtn(kb, "Бэкапы", callback_data="admin_backups", icon_key="save")
+    ibtn(kb, "Обновить", callback_data="admin_dashboard_refresh", icon_key="refresh")
+    kb.adjust(2, 2, 2, 2, 1); return kb.as_markup()
 
 def admin_promo_codes_keyboard():
     kb = InlineKeyboardBuilder()
-    ibtn(kb, "Создать промокод", callback_data="admin_create_promo_code", icon_key="gift", style="primary")
-    promo_codes = load_promo_codes()
-    earnings = load_promo_earnings()
+    ibtn(kb, "Создать промокод", callback_data="admin_create_promo_code", icon_key="plus", style="primary")
+    promo_codes = load_promo_codes(); earnings = load_promo_earnings()
     for code, data in list(promo_codes.items())[:10]:
-        status = "🟢" if data.get("is_active", True) else "🔴"
+        status = pe("check") if data.get("is_active", True) else pe("cross")
         uses = f"{data.get('current_uses', 0)}/{data.get('max_uses') or '∞'}"
         owner = data.get("owner_username", "Нет")
         earned = earnings.get(code, {}).get("total_earned", 0)
-        ibtn(kb, f"{status} {code} ({uses}) 💰{earned:.0f}₴", callback_data=f"admin_promo_code_detail_{code}", icon_key="money")
-    ibtn(kb, "Назад", callback_data="admin_dashboard_refresh", icon_key="warn", style="danger")
-    kb.adjust(1)
-    return kb.as_markup()
+        ibtn(kb, f"{code} ({uses}) @{owner} {earned:.0f}₴", callback_data=f"admin_promo_code_detail_{code}", icon_key="ticket")
+    ibtn(kb, "Назад", callback_data="admin_dashboard_refresh", icon_key="back", style="danger")
+    kb.adjust(1); return kb.as_markup()
 
 def admin_levels_keyboard():
     kb = InlineKeyboardBuilder()
-    for k, name, e in [("bronze", "Бронза", "🥉"), ("silver", "Серебро", "🥈"), ("gold", "Золото", "🥇"), ("platinum", "Платина", "💎"), ("vip", "VIP", "👑")]:
-        ibtn(kb, name, callback_data=f"admin_edit_level_{k}", icon_key="star")
-    ibtn(kb, "Назад", callback_data="admin_dashboard_refresh", icon_key="warn", style="danger")
-    kb.adjust(1)
-    return kb.as_markup()
+    for k, ek in [("bronze", "medal3"), ("silver", "medal2"), ("gold", "medal1"), ("platinum", "diamond"), ("vip", "crown")]:
+        ibtn(kb, LEVEL_KEYS[k], callback_data=f"admin_edit_level_{k}", icon_key=ek)
+    ibtn(kb, "Назад", callback_data="admin_dashboard_refresh", icon_key="back", style="danger")
+    kb.adjust(1); return kb.as_markup()
 
 def admin_referrals_settings_keyboard():
     kb = InlineKeyboardBuilder()
     ibtn(kb, "Изменить бонус %", callback_data="admin_edit_referral_bonus", icon_key="money")
-    ibtn(kb, "Назад", callback_data="admin_dashboard_refresh", icon_key="warn", style="danger")
-    kb.adjust(1)
-    return kb.as_markup()
+    ibtn(kb, "Назад", callback_data="admin_dashboard_refresh", icon_key="back", style="danger")
+    kb.adjust(1); return kb.as_markup()
 
 def admin_analytics_keyboard():
     kb = InlineKeyboardBuilder()
-    ibtn(kb, "По дням", callback_data="admin_analytics_by_days", icon_key="time")
+    ibtn(kb, "По дням", callback_data="admin_analytics_by_days", icon_key="calendar")
     ibtn(kb, "По часам", callback_data="admin_analytics_by_hours", icon_key="time")
-    ibtn(kb, "По странам", callback_data="admin_analytics_by_country", icon_key="user")
-    ibtn(kb, "Назад", callback_data="admin_dashboard_refresh", icon_key="warn", style="danger")
-    kb.adjust(1)
-    return kb.as_markup()
+    ibtn(kb, "По странам", callback_data="admin_analytics_by_country", icon_key="globe")
+    ibtn(kb, "Назад", callback_data="admin_dashboard_refresh", icon_key="back", style="danger")
+    kb.adjust(1); return kb.as_markup()
 
 # ==================== ТЕКСТЫ ====================
 FAQ_TEXT = f"""
@@ -961,36 +914,27 @@ FAQ_TEXT = f"""
 3️⃣ Напишите админу @MaskYoY и оплатите
 4️⃣ После подтверждения — аккаунт выдастся автоматически
 
-📱 <b>Как войти:</b>
+{pe('phone')} <b>Как войти:</b>
 1. Получите .session
 2. Войдите в Telegram
-3. Нажмите «🔑 Запросить код»
+3. Нажмите «{pe('key')} Запросить код»
 4. Бот автоматически перешлёт код
 
-📞 @MaskYoY
-📢 @owerpass_store
+{pe('chat')} @MaskYoY
+{pe('megaphone')} @owerpass_store
 """
 
 # ==================== СТАРТ ====================
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
     ref_code = None
-    if message.text and len(message.text.split()) > 1:
-        ref_code = message.text.split()[1]
-
+    if message.text and len(message.text.split()) > 1: ref_code = message.text.split()[1]
     is_new = await add_user(message.from_user.id, message.from_user.username, message.from_user.full_name, ref_code=ref_code)
-
     if message.from_user.id == ADMIN_ID:
-        await message.answer(f"{pe('warn')} <b>Админ-панель</b>", reply_markup=get_admin_reply_keyboard())
-        return
-
+        await message.answer(f"{pe('warn')} <b>Админ-панель</b>", reply_markup=get_admin_reply_keyboard()); return
     if not await check_subscription(message.from_user.id):
-        await message.answer(f"{pe('warn')} Подпишитесь на канал!", reply_markup=subscribe_keyboard())
-        return
-
-    text = f"{pe('star')} <b>Добро пожаловать в OverPass Store!</b>\n"
-    text += "🔹 Продажа номеров Telegram\n"
-    text += "🔹 Автоматическая выдача\n"
+        await message.answer(f"{pe('warn')} Подпишитесь на канал!", reply_markup=subscribe_keyboard()); return
+    text = f"{pe('star')} <b>Добро пожаловать в OverPass Store!</b>\n{pe('rocket')} Продажа номеров Telegram\n{pe('sparkle')} Автоматическая выдача\n"
     if is_new and ref_code and ref_code.startswith("ref_"):
         text += f"{pe('gift')} Вы зарегистрированы по реферальной ссылке!\n"
     text += "Выберите раздел:"
@@ -1003,37 +947,26 @@ async def process_check_sub(callback: types.CallbackQuery):
         try: await callback.message.edit_text(f"{pe('check')} Спасибо!", reply_markup=main_menu_keyboard())
         except: await callback.message.answer(f"{pe('check')} Спасибо!", reply_markup=main_menu_keyboard())
         await callback.message.answer("Навигация:", reply_markup=get_main_reply_keyboard())
-    else:
-        await callback.answer("❌ Не подписались!", show_alert=True)
+    else: await callback.answer(f"{pe('cross')} Не подписались!", show_alert=True)
 
 # ==================== АДМИН: СКЛАД ====================
 @dp.message(F.from_user.id == ADMIN_ID, F.text == "📦 Склад")
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_stock_menu")
 async def admin_stock_menu(event):
-    if isinstance(event, types.CallbackQuery):
-        await event.answer()
-        msg = event.message
-        edit = True
-    else:
-        msg = event
-        edit = False
-
+    if isinstance(event, types.CallbackQuery): await event.answer(); msg = event.message; edit = True
+    else: msg = event; edit = False
     counts = stock_count()
     text = f"{pe('box')} <b>СКЛАД</b>\n\n"
     if counts:
-        total = sum(counts.values())
-        text += f"<b>Всего:</b> {total}\n\n"
+        text += f"<b>Всего:</b> {sum(counts.values())}\n\n"
         for c, n in sorted(counts.items(), key=lambda x: -x[1]):
             if n > 0: text += f"• {c.upper()}: <b>{n}</b>\n"
-    else:
-        text += "<i>Пусто</i>\n"
-
+    else: text += "<i>Пусто</i>\n"
     kb = admin_stock_menu_keyboard()
     if edit:
         try: await msg.edit_text(text, reply_markup=kb)
         except: await msg.answer(text, reply_markup=kb)
-    else:
-        await msg.answer(text, reply_markup=kb)
+    else: await msg.answer(text, reply_markup=kb)
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_upload_session")
 async def admin_upload_session_start(callback: types.CallbackQuery, state: FSMContext):
@@ -1045,50 +978,36 @@ async def admin_upload_session_start(callback: types.CallbackQuery, state: FSMCo
 async def admin_receive_session(message: types.Message, state: FSMContext):
     doc = message.document
     if not doc.file_name.endswith(".session"):
-        await message.answer("❌ Нужен .session")
-        return
-
+        await message.answer(f"{pe('cross')} Нужен .session"); return
     temp_path = os.path.join(TEMP_DIR, doc.file_name)
     await bot.download(doc, temp_path)
-
     status_msg = await message.answer(f"{pe('time')} Анализирую сессию...")
     info = await analyze_session(temp_path)
-
     if not info.get("valid"):
-        await status_msg.edit_text(f"❌ <b>Сессия невалидна</b>\n\nПричина: <code>{info.get('error', 'unknown')}</code>")
+        await status_msg.edit_text(f"{pe('cross')} <b>Сессия невалидна</b>\n\nПричина: <code>{info.get('error', 'unknown')}</code>")
         try: os.remove(temp_path)
         except: pass
-        await state.clear()
-        return
-
-    phone = info["phone"]
-    country_code, country_name = detect_country(phone)
-
+        await state.clear(); return
+    phone = info["phone"]; country_code, country_name = detect_country(phone)
     if info.get("has_2fa"):
         hint = info.get("password_hint") or "—"
-        await status_msg.edit_text(f"⚠️ <b>АККАУНТ С ПАРОЛЕМ!</b>\n\n🌍 {country_name}\n📱 <code>{phone}</code>\n🔐 Хинт: <code>{hint}</code>\n\n<b>НЕ добавлен на склад.</b>")
-        try: await bot.send_message(ADMIN_ID, f"⚠️ <b>АККАУНТ С ПАРОЛЕМ — НЕ ДОБАВЛЕН!</b>\n\n🌍 {country_name}\n📱 <code>{phone}</code>\n🔐 Хинт: <code>{hint}</code>\n\nФайл: <code>{doc.file_name}</code>")
+        await status_msg.edit_text(f"{pe('warn')} <b>АККАУНТ С ПАРОЛЕМ!</b>\n\n{pe('globe')} {country_name}\n{pe('phone')} <code>{phone}</code>\n{pe('lock')} Хинт: <code>{hint}</code>\n\n<b>НЕ добавлен на склад.</b>")
+        try: await bot.send_message(ADMIN_ID, f"{pe('warn')} <b>АККАУНТ С ПАРОЛЕМ — НЕ ДОБАВЛЕН!</b>\n\n{pe('globe')} {country_name}\n{pe('phone')} <code>{phone}</code>\n{pe('lock')} Хинт: <code>{hint}</code>\n\nФайл: <code>{doc.file_name}</code>")
         except: pass
         try: os.remove(temp_path)
         except: pass
-        await state.clear()
-        return
-
+        await state.clear(); return
     if country_code not in DEFAULT_PRICES:
-        await status_msg.edit_text(f"⚠️ <b>Страна без цены</b>\n\n🌍 {country_name}\n📱 <code>{phone}</code>\n🆔 <code>{country_code}</code>")
+        await status_msg.edit_text(f"{pe('warn')} <b>Страна без цены</b>\n\n{pe('globe')} {country_name}\n{pe('phone')} <code>{phone}</code>\nID: <code>{country_code}</code>")
         try: os.remove(temp_path)
         except: pass
-        await state.clear()
-        return
-
+        await state.clear(); return
     price_uah, price_stars = DEFAULT_PRICES[country_code]
     name = doc.file_name.replace(".session", "")
-
     try:
         os.makedirs(country_dir(country_code), exist_ok=True)
         shutil.copy(temp_path, session_path(country_code, name))
         shutil.copy(temp_path, watcher_path(country_code, name))
-
         meta = {
             "country": country_code, "session_name": name, "phone": phone,
             "user_id": info["user_id"], "first_name": info.get("first_name"),
@@ -1097,111 +1016,83 @@ async def admin_receive_session(message: types.Message, state: FSMContext):
             "status": "available", "added_at": datetime.now().isoformat(), "sold_at": None, "sold_to": None,
         }
         save_meta(country_code, name, meta)
-
         try: os.remove(temp_path)
         except: pass
-
-        await status_msg.edit_text(f"{pe('check')} <b>Аккаунт добавлен!</b>\n\n🌍 {country_name}\n📱 <code>{phone}</code>\n👤 {info.get('first_name', '—')}\n⭐ Premium: {'Да' if info.get('premium') else 'Нет'}\n🔐 2FA: Нет\n\n💰 {price_uah}₴")
-    except Exception as e:
-        await status_msg.edit_text(f"❌ Ошибка: {e}")
-
+        await status_msg.edit_text(f"{pe('check')} <b>Аккаунт добавлен!</b>\n\n{pe('globe')} {country_name}\n{pe('phone')} <code>{phone}</code>\n{pe('user')} {info.get('first_name', '—')}\n{pe('star')} Premium: {'Да' if info.get('premium') else 'Нет'}\n{pe('lock')} 2FA: Нет\n\n{pe('money')} {price_uah}₴")
+    except Exception as e: await status_msg.edit_text(f"{pe('cross')} Ошибка: {e}")
     await state.clear()
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_list_accounts")
 async def admin_list_accounts(callback: types.CallbackQuery):
     await callback.answer()
     avail = all_available()
-    text = f"📋 <b>ВСЕ АККАУНТЫ ({len(avail)})</b>\n\n"
+    text = f"{pe('box')} <b>ВСЕ АККАУНТЫ ({len(avail)})</b>\n\n"
     for acc in avail[:30]:
-        pwd = " 🔐" if acc.get("password") else ""
+        pwd = f" {pe('lock')}" if acc.get("password") else ""
         text += f"• {acc['country'].upper()} | {acc['phone']} | {acc['price_uah']}₴{pwd}\n"
     if len(avail) > 30: text += f"\n...и ещё {len(avail) - 30}"
     kb = InlineKeyboardBuilder()
-    ibtn(kb, "Назад", callback_data="admin_stock_menu", icon_key="warn", style="danger")
+    ibtn(kb, "Назад", callback_data="admin_stock_menu", icon_key="back", style="danger")
     await callback.message.edit_text(text, reply_markup=kb.as_markup())
 
 # ==================== АДМИН: БЭКАПЫ ====================
 @dp.message(F.from_user.id == ADMIN_ID, F.text == "💾 Бэкапы")
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_backups")
 async def admin_backups(event):
-    if isinstance(event, types.CallbackQuery):
-        await event.answer()
-        target = event.message
-        edit = True
-    else:
-        target = event
-        edit = False
-
-    text = (f"💾 <b>БЭКАПЫ</b>\n\nRailway стирает файлы при перезапуске.\n\n"
-            f"<b>Что делать:</b>\n1. Нажми «📥 Скачать все бэкапы»\n"
+    if isinstance(event, types.CallbackQuery): await event.answer(); target = event.message; edit = True
+    else: target = event; edit = False
+    text = (f"{pe('save')} <b>БЭКАПЫ</b>\n\n"
+            f"Railway стирает файлы при перезапуске.\n\n"
+            f"<b>Что делать:</b>\n1. Нажми «{pe('save')} Скачать все бэкапы»\n"
             f"2. Скопируй содержимое .b64 файлов\n3. Вставь в Railway → Variables\n"
             f"4. Redeploy — данные восстановятся.\n\n"
             f"<i>Файлы .b64 создаются автоматически после каждого изменения.</i>")
-
     kb = InlineKeyboardBuilder()
-    ibtn(kb, "Скачать все бэкапы", callback_data="admin_download_backups", icon_key="money")
-    ibtn(kb, "Назад", callback_data="admin_dashboard_refresh", icon_key="warn", style="danger")
+    ibtn(kb, "Скачать все бэкапы", callback_data="admin_download_backups", icon_key="save")
+    ibtn(kb, "Назад", callback_data="admin_dashboard_refresh", icon_key="back", style="danger")
     kb.adjust(1)
-
     if edit:
         try: await target.edit_text(text, reply_markup=kb.as_markup())
         except: await target.answer(text, reply_markup=kb.as_markup())
-    else:
-        await target.answer(text, reply_markup=kb.as_markup())
+    else: await target.answer(text, reply_markup=kb.as_markup())
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_download_backups")
 async def admin_download_backups(callback: types.CallbackQuery):
     await callback.answer()
-    await callback.message.answer("📥 Собираю бэкапы...")
-
+    await callback.message.answer(f"{pe('time')} Собираю бэкапы...")
     all_data = {}
     for name in BACKUP_FILES:
         path = f"{name}.json"
         if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
-                all_data[name] = json.load(f)
-
+            with open(path, "r", encoding="utf-8") as f: all_data[name] = json.load(f)
     combined = json.dumps(all_data, ensure_ascii=False, indent=2)
     b64_all = base64.b64encode(combined.encode("utf-8")).decode("ascii")
-
     backup_file = "backup_all.b64"
-    with open(backup_file, "w", encoding="utf-8") as f:
-        f.write(b64_all)
-
-    await callback.message.answer_document(FSInputFile(backup_file), caption=f"💾 <b>BACKUP_ALL_B64</b>\n\nСкопируй в Railway → Variables → BACKUP_ALL_B64")
-
+    with open(backup_file, "w", encoding="utf-8") as f: f.write(b64_all)
+    await callback.message.answer_document(FSInputFile(backup_file), caption=f"{pe('save')} <b>BACKUP_ALL_B64</b>\n\nСкопируй в Railway → Variables → BACKUP_ALL_B64")
     for name, data in all_data.items():
         try:
             b64 = base64.b64encode(json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")).decode("ascii")
-            with open(f"backup_{name}.b64", "w", encoding="utf-8") as f:
-                f.write(b64)
+            with open(f"backup_{name}.b64", "w", encoding="utf-8") as f: f.write(b64)
         except: pass
 
 # ==================== АДМИН: ПРОМОКОДЫ ====================
 @dp.message(F.from_user.id == ADMIN_ID, F.text == "🎟 Промокоды")
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_promo_dashboard")
 async def admin_promo_menu(event):
-    if isinstance(event, types.CallbackQuery):
-        await event.answer()
-        target = event.message
-        edit = True
-    else:
-        target = event
-        edit = False
-
-    text = "🎟 <b>УПРАВЛЕНИЕ ПРОМОКОДАМИ</b>\n\nВыбери промокод или создай новый:"
+    if isinstance(event, types.CallbackQuery): await event.answer(); target = event.message; edit = True
+    else: target = event; edit = False
+    text = f"{pe('ticket')} <b>УПРАВЛЕНИЕ ПРОМОКОДАМИ</b>\n\nВыбери промокод или создай новый:"
     kb = admin_promo_codes_keyboard()
-
     if edit:
         try: await target.edit_text(text, reply_markup=kb)
         except: await target.answer(text, reply_markup=kb)
-    else:
-        await target.answer(text, reply_markup=kb)
+    else: await target.answer(text, reply_markup=kb)
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_create_promo_code")
 async def admin_start_create_promo(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
-    await callback.message.edit_text("🎟 <b>Создание промокода</b>\n\nВведи код (например, <code>SALE2026</code>):")
+    await callback.message.edit_text(f"{pe('ticket')} <b>Создание промокода</b>\n\nВведи код (например, <code>SALE2026</code>):")
     await state.set_state(AdminPromoStates.waiting_for_promo_code)
 
 @dp.message(F.from_user.id == ADMIN_ID, AdminPromoStates.waiting_for_promo_code, F.text)
@@ -1209,15 +1100,12 @@ async def admin_promo_code_input(message: types.Message, state: FSMContext):
     code = message.text.strip().upper()
     promo_codes = load_promo_codes()
     if code in promo_codes:
-        await message.answer("❌ Такой промокод уже есть. Введи другой:")
-        return
+        await message.answer(f"{pe('cross')} Такой промокод уже есть. Введи другой:"); return
     await state.update_data(promo_code=code)
-
     kb = InlineKeyboardBuilder()
-    ibtn(kb, "Процентная скидка", callback_data="promo_type_percent", style="primary")
+    ibtn(kb, "Процентная скидка", callback_data="promo_type_percent", icon_key="chart", style="primary")
     ibtn(kb, "Фиксированная скидка", callback_data="promo_type_fixed", icon_key="money", style="primary")
     kb.adjust(1)
-
     await message.answer(f"Код: <code>{code}</code>\n\nВыбери тип скидки:", reply_markup=kb.as_markup())
     await state.set_state(AdminPromoStates.waiting_for_discount_type)
 
@@ -1236,16 +1124,13 @@ async def admin_promo_discount_value(message: types.Message, state: FSMContext):
         value = float(message.text)
         if value <= 0: raise ValueError
     except:
-        await message.answer("❌ Введи положительное число")
-        return
+        await message.answer(f"{pe('cross')} Введи положительное число"); return
     await state.update_data(discount_value=value)
-
     kb = InlineKeyboardBuilder()
-    ibtn(kb, "Без ограничений", callback_data="promo_unlimited")
+    ibtn(kb, "Без ограничений", callback_data="promo_unlimited", icon_key="check")
     for n in [1, 10, 50, 100, 500]:
         kb.button(text=f"{n} использ.", callback_data=f"promo_max_{n}")
     kb.adjust(1)
-
     await message.answer("Сколько раз можно использовать промокод?", reply_markup=kb.as_markup())
     await state.set_state(AdminPromoStates.waiting_for_max_uses)
 
@@ -1254,13 +1139,11 @@ async def admin_promo_max_uses(callback: types.CallbackQuery, state: FSMContext)
     await callback.answer()
     max_uses = None if callback.data == "promo_unlimited" else int(callback.data.split("_")[-1])
     await state.update_data(max_uses=max_uses)
-
     kb = InlineKeyboardBuilder()
     for days in [1, 7, 30, 90]:
-        kb.button(text=f"{days} дней", callback_data=f"promo_expire_{days}")
+        ibtn(kb, f"{days} дней", callback_data=f"promo_expire_{days}", icon_key="calendar")
     ibtn(kb, "Навсегда", callback_data="promo_expire_0", icon_key="check")
     kb.adjust(2)
-
     await callback.message.edit_text("Срок действия:", reply_markup=kb.as_markup())
     await state.set_state(AdminPromoStates.waiting_for_expires_date)
 
@@ -1270,14 +1153,13 @@ async def admin_promo_expires(callback: types.CallbackQuery, state: FSMContext):
     days = int(callback.data.split("_")[-1])
     expires_at = (datetime.now() + timedelta(days=days)).isoformat() if days > 0 else None
     await state.update_data(expires_at=expires_at)
-    await callback.message.edit_text("Введите username владельца промокода (без @):")
+    await callback.message.edit_text(f"{pe('user')} Введите username владельца промокода (без @):")
     await state.set_state(AdminPromoStates.waiting_for_owner_username)
 
 @dp.message(F.from_user.id == ADMIN_ID, AdminPromoStates.waiting_for_owner_username, F.text)
 async def admin_promo_owner_username(message: types.Message, state: FSMContext):
     username = message.text.strip().lstrip("@")
     data = await state.get_data()
-
     promo_codes = load_promo_codes()
     promo_codes[data["promo_code"]] = {
         "code": data["promo_code"], "discount_type": data["discount_type"],
@@ -1287,16 +1169,14 @@ async def admin_promo_owner_username(message: types.Message, state: FSMContext):
         "owner_username": username, "total_earned": 0.0
     }
     save_promo_codes(promo_codes)
-
     discount_desc = (f"{data['discount_value']}%" if data["discount_type"] == "percent" else f"{data['discount_value']} грн")
     text = (f"{pe('check')} <b>Промокод создан!</b>\n\n"
-            f"🎟 Код: <code>{data['promo_code']}</code>\n"
-            f"💰 Скидка: {discount_desc}\n"
-            f"👤 Владелец: @{username}\n"
+            f"{pe('ticket')} Код: <code>{data['promo_code']}</code>\n"
+            f"{pe('money')} Скидка: {discount_desc}\n"
+            f"{pe('user')} Владелец: @{username}\n"
             f"🔢 Использований: {data['max_uses'] or '♾'}\n")
-    if data.get("expires_at"): text += f"📅 До: {datetime.fromisoformat(data['expires_at']).strftime('%d.%m.%Y')}\n"
-    else: text += f"📅 Действует: навсегда\n"
-
+    if data.get("expires_at"): text += f"{pe('calendar')} До: {datetime.fromisoformat(data['expires_at']).strftime('%d.%m.%Y')}\n"
+    else: text += f"{pe('calendar')} Действует: навсегда\n"
     await message.answer(text, reply_markup=admin_promo_codes_keyboard())
     await state.clear()
 
@@ -1307,33 +1187,28 @@ async def admin_promo_code_detail(callback: types.CallbackQuery):
     promo_codes = load_promo_codes()
     promo = promo_codes.get(code)
     if not promo:
-        await callback.answer("❌ Не найден", show_alert=True)
-        return
-
-    status = "🟢 Активен" if promo.get("is_active", True) else "🔴 Выключен"
+        await callback.answer(f"{pe('cross')} Не найден", show_alert=True); return
+    status = f"{pe('check')} Активен" if promo.get("is_active", True) else f"{pe('cross')} Выключен"
     discount_desc = (f"{promo['discount_value']}%" if promo["discount_type"] == "percent" else f"{promo['discount_value']} грн")
     uses_text = f"{promo.get('current_uses', 0)}/{promo.get('max_uses') or '∞'}"
     owner = promo.get("owner_username", "Не указан")
     earned = promo.get("total_earned", 0)
-
-    text = (f"🎟 <b>Промокод {code}</b>\n\n"
-            f"💰 Скидка: {discount_desc}\n"
-            f"👤 Владелец: @{owner}\n"
-            f"📌 Статус: {status}\n"
+    text = (f"{pe('ticket')} <b>Промокод {code}</b>\n\n"
+            f"{pe('money')} Скидка: {discount_desc}\n"
+            f"{pe('user')} Владелец: @{owner}\n"
+            f"{pe('pin')} Статус: {status}\n"
             f"🔢 Использовано: {uses_text}\n"
             f"{pe('money')} Заработано: <b>{earned:.2f} ₴</b>\n")
-    if promo.get("expires_at"): text += f"📅 До: {datetime.fromisoformat(promo['expires_at']).strftime('%d.%m.%Y')}\n"
-    else: text += f"📅 Действует: навсегда\n"
-
+    if promo.get("expires_at"): text += f"{pe('calendar')} До: {datetime.fromisoformat(promo['expires_at']).strftime('%d.%m.%Y')}\n"
+    else: text += f"{pe('calendar')} Действует: навсегда\n"
     kb = InlineKeyboardBuilder()
     if promo.get("is_active", True):
-        ibtn(kb, "Выключить", callback_data=f"admin_deactivate_promo_{code}", icon_key="warn", style="danger")
+        ibtn(kb, "Выключить", callback_data=f"admin_deactivate_promo_{code}", icon_key="cross", style="danger")
     else:
         ibtn(kb, "Включить", callback_data=f"admin_activate_promo_{code}", icon_key="check", style="success")
-    ibtn(kb, "Удалить", callback_data=f"admin_delete_promo_{code}", style="danger")
-    ibtn(kb, "Назад", callback_data="admin_promo_dashboard", style="danger")
+    ibtn(kb, "Удалить", callback_data=f"admin_delete_promo_{code}", icon_key="trash", style="danger")
+    ibtn(kb, "Назад", callback_data="admin_promo_dashboard", icon_key="back", style="danger")
     kb.adjust(1)
-
     try: await callback.message.edit_text(text, reply_markup=kb.as_markup())
     except: await callback.message.answer(text, reply_markup=kb.as_markup())
 
@@ -1342,10 +1217,8 @@ async def admin_deactivate_promo(callback: types.CallbackQuery):
     await callback.answer()
     code = callback.data.replace("admin_deactivate_promo_", "")
     promo_codes = load_promo_codes()
-    if code in promo_codes:
-        promo_codes[code]["is_active"] = False
-        save_promo_codes(promo_codes)
-    await callback.answer("✅ Выключен", show_alert=True)
+    if code in promo_codes: promo_codes[code]["is_active"] = False; save_promo_codes(promo_codes)
+    await callback.answer(f"{pe('check')} Выключен", show_alert=True)
     await admin_promo_menu(callback)
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data.startswith("admin_activate_promo_"))
@@ -1353,10 +1226,8 @@ async def admin_activate_promo(callback: types.CallbackQuery):
     await callback.answer()
     code = callback.data.replace("admin_activate_promo_", "")
     promo_codes = load_promo_codes()
-    if code in promo_codes:
-        promo_codes[code]["is_active"] = True
-        save_promo_codes(promo_codes)
-    await callback.answer("✅ Включен", show_alert=True)
+    if code in promo_codes: promo_codes[code]["is_active"] = True; save_promo_codes(promo_codes)
+    await callback.answer(f"{pe('check')} Включен", show_alert=True)
     await admin_promo_menu(callback)
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data.startswith("admin_delete_promo_"))
@@ -1364,49 +1235,37 @@ async def admin_delete_promo(callback: types.CallbackQuery):
     await callback.answer()
     code = callback.data.replace("admin_delete_promo_", "")
     promo_codes = load_promo_codes()
-    if code in promo_codes:
-        del promo_codes[code]
-        save_promo_codes(promo_codes)
-    await callback.answer("🗑 Удалён", show_alert=True)
+    if code in promo_codes: del promo_codes[code]; save_promo_codes(promo_codes)
+    await callback.answer(f"{pe('trash')} Удалён", show_alert=True)
     await admin_promo_menu(callback)
 
 # ==================== АДМИН: РАССЫЛКА ====================
 @dp.message(F.from_user.id == ADMIN_ID, F.text == "📢 Рассылка")
 async def admin_broadcast_start(message: types.Message, state: FSMContext):
     users = load_users()
-    if not users: return await message.answer("❌ Нет пользователей")
-    await message.answer(f"📢 <b>РАССЫЛКА</b>\n\n👥 Получателей: <b>{len(users)}</b>\n\nОтправь мне сообщение для рассылки.\nМожно отправить: <b>текст, фото, видео, документ, стикер</b>.\n\nДля отмены: /cancel")
+    if not users: return await message.answer(f"{pe('cross')} Нет пользователей")
+    await message.answer(f"{pe('megaphone')} <b>РАССЫЛКА</b>\n\n{pe('user')} Получателей: <b>{len(users)}</b>\n\nОтправь мне сообщение для рассылки.\nМожно отправить: <b>текст, фото, видео, документ, стикер</b>.\n\nДля отмены: /cancel")
     await state.set_state(AdminStates.waiting_for_broadcast)
 
 @dp.message(AdminStates.waiting_for_broadcast)
 async def process_broadcast(message: types.Message, state: FSMContext):
     if message.text == "/cancel":
-        await message.answer("❌ Отменено", reply_markup=get_admin_reply_keyboard())
-        await state.clear()
-        return
-
-    users = load_users()
-    total = len(users)
-    success, failed, blocked = 0, 0, 0
-    status_msg = await message.answer(f"⏳ <b>Рассылка запущена...</b>\n\n👥 Всего: {total}\n📤 Отправлено: 0\n❌ Ошибок: 0")
+        await message.answer(f"{pe('cross')} Отменено", reply_markup=get_admin_reply_keyboard()); await state.clear(); return
+    users = load_users(); total = len(users); success = failed = blocked = 0
+    status_msg = await message.answer(f"{pe('time')} <b>Рассылка запущена...</b>\n\n{pe('user')} Всего: {total}\n📤 Отправлено: 0\n{pe('cross')} Ошибок: 0")
     last_update = 0
-
     for i, uid in enumerate(users.keys(), 1):
-        try:
-            await bot.copy_message(chat_id=int(uid), from_chat_id=message.chat.id, message_id=message.message_id)
-            success += 1
+        try: await bot.copy_message(chat_id=int(uid), from_chat_id=message.chat.id, message_id=message.message_id); success += 1
         except Exception as e:
             err = str(e).lower()
             if "blocked" in err or "kicked" in err or "chat not found" in err: blocked += 1
             else: failed += 1
         await asyncio.sleep(0.05)
-
         if i - last_update >= 20:
             last_update = i
-            try: await status_msg.edit_text(f"⏳ <b>Рассылка идёт...</b>\n\n👥 Всего: {total}\n📊 Прогресс: {i}/{total} ({int(i/total*100)}%)\n📤 Доставлено: {success}\n🚫 Заблокировали: {blocked}\n❌ Ошибок: {failed}")
+            try: await status_msg.edit_text(f"{pe('time')} <b>Рассылка идёт...</b>\n\n{pe('user')} Всего: {total}\n{pe('chart')} Прогресс: {i}/{total} ({int(i/total*100)}%)\n📤 Доставлено: {success}\n🚫 Заблокировали: {blocked}\n{pe('cross')} Ошибок: {failed}")
             except: pass
-
-    await status_msg.edit_text(f"✅ <b>РАССЫЛКА ЗАВЕРШЕНА!</b>\n\n👥 Всего: {total}\n📤 Доставлено: <b>{success}</b>\n🚫 Заблокировали бота: <b>{blocked}</b>\n❌ Ошибок: <b>{failed}</b>", reply_markup=get_admin_reply_keyboard())
+    await status_msg.edit_text(f"{pe('check')} <b>РАССЫЛКА ЗАВЕРШЕНА!</b>\n\n{pe('user')} Всего: {total}\n📤 Доставлено: <b>{success}</b>\n🚫 Заблокировали бота: <b>{blocked}</b>\n{pe('cross')} Ошибок: <b>{failed}</b>", reply_markup=get_admin_reply_keyboard())
     await state.clear()
 
 @dp.message(Command("cancel"))
@@ -1414,21 +1273,23 @@ async def cancel_handler(message: types.Message, state: FSMContext):
     if await state.get_state() is None: return
     await state.clear()
     kb = get_admin_reply_keyboard() if message.from_user.id == ADMIN_ID else get_main_reply_keyboard()
-    await message.answer("❌ Отменено", reply_markup=kb)
+    await message.answer(f"{pe('cross')} Отменено", reply_markup=kb)
 
 # ==================== АДМИН: СТАТИСТИКА ====================
 @dp.message(F.from_user.id == ADMIN_ID, F.text == "📊 Статистика")
 async def admin_statistics(message: types.Message):
-    orders = load_orders()
-    users = load_users()
-    status_counts = {}
-    rev_uah = 0
+    orders = load_orders(); users = load_users(); status_counts = {}; rev_uah = 0
     for order in orders.values():
-        s = order["status"]
-        status_counts[s] = status_counts.get(s, 0) + 1
+        s = order["status"]; status_counts[s] = status_counts.get(s, 0) + 1
         if s == "completed" and not isinstance(order.get("total", 0), str): rev_uah += order.get("total", 0)
     counts = stock_count()
-    text = (f"📊 СТАТИСТИКА\n👤 Юзеров: {len(users)}\n📦 Заказов: {len(orders)}\n✅ Выполнено: {status_counts.get('completed', 0)}\n⏳ Ожидают: {status_counts.get('awaiting_payment', 0)}\n💰 UAH: {rev_uah}\n📦 Склад: {sum(counts.values())}")
+    text = (f"{pe('chart')} <b>СТАТИСТИКА</b>\n"
+            f"{pe('user')} Юзеров: {len(users)}\n"
+            f"{pe('cart')} Заказов: {len(orders)}\n"
+            f"{pe('check')} Выполнено: {status_counts.get('completed', 0)}\n"
+            f"{pe('time')} Ожидают: {status_counts.get('awaiting_payment', 0)}\n"
+            f"{pe('money')} UAH: {rev_uah}\n"
+            f"{pe('box')} Склад: {sum(counts.values())}")
     await message.answer(text, reply_markup=get_admin_reply_keyboard())
 
 @dp.message(F.from_user.id == ADMIN_ID, F.text == "📋 Все заказы")
@@ -1447,24 +1308,21 @@ async def admin_page_nav(callback: types.CallbackQuery):
 async def show_admin_orders_page(target, page, status_filter=None, edit=False):
     orders = load_orders()
     filtered = {k: v for k, v in orders.items() if (not status_filter or v["status"] == status_filter)}
-    order_list = sorted(filtered.items(), reverse=True)
-    per_page = 5
+    order_list = sorted(filtered.items(), reverse=True); per_page = 5
     if not order_list:
         kb = admin_all_orders_keyboard(0, per_page, status_filter)
-        if edit: await target.edit_text("📋 Нет заказов", reply_markup=kb)
-        else: await target.answer("📋 Нет заказов", reply_markup=get_admin_reply_keyboard())
+        if edit: await target.edit_text(f"{pe('cart')} Нет заказов", reply_markup=kb)
+        else: await target.answer(f"{pe('cart')} Нет заказов", reply_markup=get_admin_reply_keyboard())
         return
-
     total_pages = (len(order_list) + per_page - 1) // per_page
     page = max(0, min(page, total_pages - 1))
-    text = f"📋 ЗАКАЗЫ ({page + 1}/{total_pages})\n"
+    text = f"{pe('cart')} <b>ЗАКАЗЫ</b> ({page + 1}/{total_pages})\n"
     for oid, order in order_list[page * per_page:(page + 1) * per_page]:
-        e, _ = STATUS_CONFIG.get(order["status"], ("❓", ""))
+        e, _ = STATUS_CONFIG.get(order["status"], (pe("warn"), ""))
         s = method_symbol(order.get("payment_method", "uah"))
         short = order.get("short_id", oid[:8])
         created = datetime.fromisoformat(order["created_at"]).strftime("%d.%m %H:%M")
         text += f"{e} {short} | {order['product'][:20]}\n  @{order.get('username', '—')} | {order['total']}{s} | {created}\n"
-
     kb = admin_all_orders_keyboard(page, per_page, status_filter)
     if edit:
         try: await target.edit_text(text, reply_markup=kb)
@@ -1475,19 +1333,14 @@ async def show_admin_orders_page(target, page, status_filter=None, edit=False):
 async def admin_order_detail(callback: types.CallbackQuery):
     await callback.answer()
     oid = callback.data.replace("admin_order_detail_", "")
-    orders = load_orders()
-    rk = find_order_key(orders, oid)
-    if not rk: return await callback.answer("❌ Не найден", show_alert=True)
-    order = orders[rk]
-    e, st = STATUS_CONFIG.get(order["status"], ("❓", ""))
-    s = method_symbol(order.get("payment_method", "uah"))
-    short = order.get("short_id", rk[:8])
+    orders = load_orders(); rk = find_order_key(orders, oid)
+    if not rk: return await callback.answer(f"{pe('cross')} Не найден", show_alert=True)
+    order = orders[rk]; e, st = STATUS_CONFIG.get(order["status"], (pe("warn"), ""))
+    s = method_symbol(order.get("payment_method", "uah")); short = order.get("short_id", rk[:8])
     total = order["total"] if isinstance(order["total"], str) else f"{order['total']} {s}"
-
-    text = (f"📦 <b>Заказ {short}</b>\n👤 @{order.get('username', '—')}\n🆔 <code>{order['user_id']}</code>\n📅 {datetime.fromisoformat(order['created_at']).strftime('%d.%m.%Y %H:%M')}\n🌍 {order['product']}\n💰 {total}\n📌 {e} {st}\n")
-    if order.get("phone"): text += f"📱 {order['phone']}\n"
-    if order.get("used_promo_code"): text += f"🎟 Промокод: <code>{order['used_promo_code']}</code>\n"
-
+    text = (f"{pe('box')} <b>Заказ {short}</b>\n{pe('user')} @{order.get('username', '—')}\n🆔 <code>{order['user_id']}</code>\n{pe('calendar')} {datetime.fromisoformat(order['created_at']).strftime('%d.%m.%Y %H:%M')}\n{pe('globe')} {order['product']}\n{pe('money')} {total}\n{pe('pin')} {e} {st}\n")
+    if order.get("phone"): text += f"{pe('phone')} {order['phone']}\n"
+    if order.get("used_promo_code"): text += f"{pe('ticket')} Промокод: <code>{order['used_promo_code']}</code>\n"
     try: await callback.message.edit_text(text, reply_markup=admin_order_card_keyboard(rk, order["status"], order["user_id"]))
     except: await callback.message.answer(text, reply_markup=admin_order_card_keyboard(rk, order["status"], order["user_id"]))
 
@@ -1499,7 +1352,7 @@ async def admin_back_to_list(callback: types.CallbackQuery):
 @dp.message(F.from_user.id == ADMIN_ID, F.text == "💰 Реквизиты")
 async def admin_requisites(message: types.Message):
     req = load_requisites()
-    text = f"💰 РЕКВИЗИТЫ:\n💳 Гривны:\n{req.get('uah', '—')}\n🎁 Подарок:\n{req.get('gift', '—')}\n"
+    text = f"{pe('money')} <b>РЕКВИЗИТЫ:</b>\n{pe('card')} Гривны:\n{req.get('uah', '—')}\n{pe('gift')} Подарок:\n{req.get('gift', '—')}\n"
     await message.answer(text, reply_markup=requisites_edit_keyboard())
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data.startswith("edit_req_"))
@@ -1508,17 +1361,14 @@ async def edit_requisite_start(callback: types.CallbackQuery, state: FSMContext)
     method = callback.data.replace("edit_req_", "")
     labels = {"uah": "Гривны", "gift": "Подарок"}
     await state.update_data(edit_req_method=method)
-    await callback.message.answer(f"✏️ Введите новые реквизиты для {labels.get(method, method)}:")
+    await callback.message.answer(f"{pe('warn')} Введите новые реквизиты для {labels.get(method, method)}:")
     await state.set_state(AdminStates.waiting_for_requisites_edit)
 
 @dp.message(AdminStates.waiting_for_requisites_edit, F.text)
 async def save_requisite(message: types.Message, state: FSMContext):
-    data = await state.get_data()
-    method = data["edit_req_method"]
-    req = load_requisites()
-    req[method] = message.text
-    save_requisites(req)
-    await message.answer(f"✅ Обновлено!", reply_markup=get_admin_reply_keyboard())
+    data = await state.get_data(); method = data["edit_req_method"]
+    req = load_requisites(); req[method] = message.text; save_requisites(req)
+    await message.answer(f"{pe('check')} Обновлено!", reply_markup=get_admin_reply_keyboard())
     await state.clear()
 
 # ==================== АДМИН: УПРАВЛЕНИЕ ЗАКАЗАМИ ====================
@@ -1526,14 +1376,9 @@ async def save_requisite(message: types.Message, state: FSMContext):
 async def admin_confirm_payment(callback: types.CallbackQuery):
     await callback.answer()
     oid = callback.data.replace("admin_confirm_payment_", "")
-    orders = load_orders()
-    rk = find_order_key(orders, oid)
+    orders = load_orders(); rk = find_order_key(orders, oid)
     if not rk: return
-    order = orders[rk]
-    order["status"] = "paid"
-    order["paid_at"] = datetime.now().isoformat()
-    save_orders(orders)
-
+    order = orders[rk]; order["status"] = "paid"; order["paid_at"] = datetime.now().isoformat(); save_orders(orders)
     await callback.message.edit_text(f"{pe('check')} Оплата подтверждена. Выдаю аккаунт...")
     await deliver_to_user(order, rk)
 
@@ -1541,134 +1386,104 @@ async def admin_confirm_payment(callback: types.CallbackQuery):
 async def admin_reject_order(callback: types.CallbackQuery):
     await callback.answer()
     oid = callback.data.replace("admin_reject_", "")
-    orders = load_orders()
-    rk = find_order_key(orders, oid)
+    orders = load_orders(); rk = find_order_key(orders, oid)
     if not rk: return
-    order = orders[rk]
-    order["status"] = "rejected"
-    save_orders(orders)
-    if order.get("country_code") and order.get("session_name"):
-        release_account(order["country_code"], order["session_name"])
-    try: await bot.send_message(order["user_id"], f"❌ Заказ {order.get('short_id', rk)} отклонён")
+    order = orders[rk]; order["status"] = "rejected"; save_orders(orders)
+    if order.get("country_code") and order.get("session_name"): release_account(order["country_code"], order["session_name"])
+    try: await bot.send_message(order["user_id"], f"{pe('cross')} Заказ {order.get('short_id', rk)} отклонён")
     except: pass
-    try:
-        await callback.message.edit_text(callback.message.text + f"\n❌ <b>ОТКЛОНЁН</b>", reply_markup=admin_order_card_keyboard(rk, "rejected", order["user_id"]))
+    try: await callback.message.edit_text(callback.message.text + f"\n{pe('cross')} <b>ОТКЛОНЁН</b>", reply_markup=admin_order_card_keyboard(rk, "rejected", order["user_id"]))
     except: pass
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data.startswith("admin_refund_"))
 async def admin_refund(callback: types.CallbackQuery):
     await callback.answer()
     oid = callback.data.replace("admin_refund_", "")
-    orders = load_orders()
-    rk = find_order_key(orders, oid)
+    orders = load_orders(); rk = find_order_key(orders, oid)
     if not rk: return
-    order = orders[rk]
-    order["status"] = "refunded"
-    save_orders(orders)
-    try: await bot.send_message(order["user_id"], f"💰 Возврат по {order.get('short_id', rk)}.")
+    order = orders[rk]; order["status"] = "refunded"; save_orders(orders)
+    try: await bot.send_message(order["user_id"], f"{pe('money')} Возврат по {order.get('short_id', rk)}.")
     except: pass
-    await callback.message.edit_text(callback.message.text + "\n💰 <b>ВОЗВРАТ</b>", reply_markup=admin_order_card_keyboard(rk, "refunded", order["user_id"]))
+    await callback.message.edit_text(callback.message.text + f"\n{pe('money')} <b>ВОЗВРАТ</b>", reply_markup=admin_order_card_keyboard(rk, "refunded", order["user_id"]))
 
 async def deliver_to_user(order: dict, order_key: str):
-    country_code = order["country_code"]
-    session_name = order["session_name"]
-    phone = order["phone"]
-    user_id = order["user_id"]
-
+    country_code = order["country_code"]; session_name = order["session_name"]
+    phone = order["phone"]; user_id = order["user_id"]
     sess_file = session_path(country_code, session_name)
     if not os.path.exists(sess_file):
-        try: await bot.send_message(user_id, "❌ Файл не найден. @MaskYoY")
+        try: await bot.send_message(user_id, f"{pe('cross')} Файл не найден. @MaskYoY")
         except: pass
         return
-
     meta = load_meta(country_code, session_name)
     pwd_text = ""
-    if meta and meta.get("password"): pwd_text = f"\n🔐 <b>Пароль:</b> <code>{meta['password']}</code>\n"
-
+    if meta and meta.get("password"): pwd_text = f"\n{pe('lock')} <b>Пароль:</b> <code>{meta['password']}</code>\n"
     _, country_name = detect_country(phone)
-
     try:
         await bot.send_document(
             chat_id=user_id,
             document=FSInputFile(sess_file, filename=f"{country_code}_{phone}.session"),
             caption=(
-                f"🎉 <b>ВАШ АККАУНТ</b>\n\n"
-                f"🌍 Страна: {country_name}\n"
-                f"📱 Ваш номер: <code>{phone}</code>\n"
+                f"{pe('sparkle')} <b>ВАШ АККАУНТ</b>\n\n"
+                f"{pe('globe')} Страна: {country_name}\n"
+                f"{pe('phone')} Ваш номер: <code>{phone}</code>\n"
                 f"{pwd_text}\n"
                 f"<b>Как войти:</b>\n"
                 f"1. Войдите в новый аккаунт Telegram\n"
                 f"2. Используйте номер выше для входа\n"
                 f"3. Нажмите кнопку и получите код\n\n"
-                f"<b>Код придёт сюда автоматически!</b>"
+                f"<b>{pe('key')} Код придёт сюда автоматически!</b>"
             ),
             reply_markup=user_order_actions_keyboard(order_key)
         )
         mark_sold(country_code, session_name, user_id)
-        order["status"] = "completed"
-        order["completed_at"] = datetime.now().isoformat()
-        all_orders = load_orders()
-        all_orders[order_key] = order
-        save_orders(all_orders)
-
-        users = load_users()
-        ukey = str(user_id)
+        order["status"] = "completed"; order["completed_at"] = datetime.now().isoformat()
+        all_orders = load_orders(); all_orders[order_key] = order; save_orders(all_orders)
+        users = load_users(); ukey = str(user_id)
         if ukey in users:
             users[ukey]["total_spent"] = users[ukey].get("total_spent", 0) + (order.get("total", 0) if not isinstance(order.get("total", 0), str) else 0)
             users[ukey]["orders_count"] = users[ukey].get("orders_count", 0) + 1
             save_users(users)
-
         used_promo = order.get("used_promo_code")
         if used_promo: await process_partner_commission(used_promo, order["total"], order_key)
-
         asyncio.create_task(start_code_watcher(country_code, session_name, user_id, order_key))
-
-        try: await bot.send_message(ADMIN_ID, f"📦 <b>АККАУНТ ВЫДАН</b>\n\n👤 User: <code>{user_id}</code>\n🌍 {country_code.upper()} | 📱 {phone}\n🆔 {order_key}")
+        try: await bot.send_message(ADMIN_ID, f"{pe('box')} <b>АККАУНТ ВЫДАН</b>\n\n{pe('user')} User: <code>{user_id}</code>\n{pe('globe')} {country_code.upper()} | {pe('phone')} {phone}\n🆔 {order_key}")
         except: pass
-    except Exception as e:
-        logger.error(f"Deliver error: {e}")
+    except Exception as e: logger.error(f"Deliver error: {e}")
 
 async def process_partner_commission(promo_code, order_total, order_key):
     try: order_total = float(order_total)
     except: return
-
-    promo_codes = load_promo_codes()
-    promo = promo_codes.get(promo_code)
+    promo_codes = load_promo_codes(); promo = promo_codes.get(promo_code)
     if not promo: return
-
     owner_username = promo.get("owner_username")
     if not owner_username: return
-
-    users = load_users()
-    owner_id = None
+    users = load_users(); owner_id = None
     for uid, udata in users.items():
-        if udata.get("username") == owner_username:
-            owner_id = int(uid)
-            break
+        if udata.get("username") == owner_username: owner_id = int(uid); break
     if not owner_id: owner_id = promo.get("owner_id")
     if not owner_id: return
-
     commission_percent = get_setting("partner_commission_percent", 20.0)
     commission_amount = round(order_total * (commission_percent / 100), 2)
     if commission_amount <= 0: return
-
     promo["current_uses"] = promo.get("current_uses", 0) + 1
     promo["total_earned"] = promo.get("total_earned", 0) + commission_amount
     save_promo_codes(promo_codes)
-
-    referrals = load_referrals()
-    owner_key = str(owner_id)
+    referrals = load_referrals(); owner_key = str(owner_id)
     if owner_key not in referrals:
         referrals[owner_key] = {"user_id": owner_id, "referral_code": "", "referrals_list": [], "total_earned": 0.0}
     referrals[owner_key]["total_earned"] = referrals[owner_key].get("total_earned", 0) + commission_amount
     save_referrals(referrals)
-
     try:
-        notification_text = (f"💰 <b>НОВАЯ ВЫПЛАТА ПАРТНЕРУ!</b>\n\n👤 Партнер: @{owner_username}\n🆔 Заказ: <code>{order_key}</code>\n💵 Сумма заказа: {order_total:.2f} грн\n📈 Комиссия ({commission_percent}%): <b>{commission_amount:.2f} грн</b>\n💎 Всего заработано: {referrals[owner_key]['total_earned']:.2f} грн")
+        notification_text = (f"{pe('money')} <b>НОВАЯ ВЫПЛАТА ПАРТНЕРУ!</b>\n\n"
+                             f"{pe('user')} Партнер: @{owner_username}\n"
+                             f"🆔 Заказ: <code>{order_key}</code>\n"
+                             f"{pe('money')} Сумма заказа: {order_total:.2f} грн\n"
+                             f"{pe('chart_up')} Комиссия ({commission_percent}%): <b>{commission_amount:.2f} грн</b>\n"
+                             f"{pe('diamond')} Всего заработано: {referrals[owner_key]['total_earned']:.2f} грн")
         await bot.send_message(PARTNER_GROUP_ID, notification_text)
     except Exception as e: logger.error(f"Partner notification error: {e}")
-
-    try: await bot.send_message(owner_id, f"🎉 <b>Вы получили комиссию!</b>\n\nЗа заказ <code>{order_key}</code>\nСумма: <b>{commission_amount:.2f} грн</b>\nВсего заработано: {referrals[owner_key]['total_earned']:.2f} грн")
+    try:
+        await bot.send_message(owner_id, f"{pe('sparkle')} <b>Вы получили комиссию!</b>\n\nЗа заказ <code>{order_key}</code>\nСумма: <b>{commission_amount:.2f} грн</b>\nВсего заработано: {referrals[owner_key]['total_earned']:.2f} грн")
     except: pass
 
 # ==================== ОТЗЫВЫ ====================
@@ -1676,16 +1491,14 @@ async def process_partner_commission(promo_code, order_total, order_key):
 async def start_review(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
     oid = callback.data.replace("leave_review_", "")
-    orders = load_orders()
-    rk = find_order_key(orders, oid)
+    orders = load_orders(); rk = find_order_key(orders, oid)
     if not rk:
-        await callback.message.answer("Оцените покупку:", reply_markup=stars_keyboard())
+        await callback.message.answer(f"{pe('star')} Оцените покупку:", reply_markup=stars_keyboard())
         await state.update_data(review_order_id=None)
-        await state.set_state(ReviewStates.waiting_for_stars)
-        return
+        await state.set_state(ReviewStates.waiting_for_stars); return
     order = orders[rk]
     await state.update_data(review_order_id=rk)
-    await callback.message.edit_text(f"Оцените {order.get('short_id', rk)}:", reply_markup=stars_keyboard())
+    await callback.message.edit_text(f"{pe('star')} Оцените {order.get('short_id', rk)}:", reply_markup=stars_keyboard())
     await state.set_state(ReviewStates.waiting_for_stars)
 
 @dp.callback_query(ReviewStates.waiting_for_stars, F.data.startswith("stars_"))
@@ -1693,20 +1506,20 @@ async def process_stars(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
     rating = int(callback.data.split("_")[1])
     await state.update_data(stars=rating)
-    await callback.message.edit_text(f"{'⭐' * rating}\n📸 Фото или пропустить:", reply_markup=review_photo_skip_keyboard())
+    await callback.message.edit_text(f"{pe('star')} {'⭐' * rating}\n📸 Фото или пропустить:", reply_markup=review_photo_skip_keyboard())
     await state.set_state(ReviewStates.waiting_for_photo_or_skip)
 
 @dp.callback_query(ReviewStates.waiting_for_photo_or_skip, F.data == "skip_photo")
 async def skip_photo(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
     await state.update_data(photo=None)
-    await callback.message.edit_text("✏️ Текст отзыва:")
+    await callback.message.edit_text(f"{pe('chat')} Текст отзыва:")
     await state.set_state(ReviewStates.waiting_for_text)
 
 @dp.message(ReviewStates.waiting_for_photo_or_skip, F.photo)
 async def process_photo(message: types.Message, state: FSMContext):
     await state.update_data(photo=message.photo[-1].file_id)
-    await message.answer("✏️ Текст отзыва:")
+    await message.answer(f"{pe('chat')} Текст отзыва:")
     await state.set_state(ReviewStates.waiting_for_text)
 
 @dp.message(ReviewStates.waiting_for_text, F.text)
@@ -1722,21 +1535,16 @@ async def process_review_text(message: types.Message, state: FSMContext):
         "status": "pending", "created_at": datetime.now().isoformat(),
     }
     save_reviews(reviews)
-
     oid = data.get("review_order_id")
     if oid:
-        orders = load_orders()
-        rk = find_order_key(orders, oid)
-        if rk:
-            orders[rk]["reviewed"] = True
-            save_orders(orders)
-
+        orders = load_orders(); rk = find_order_key(orders, oid)
+        if rk: orders[rk]["reviewed"] = True; save_orders(orders)
     stars_str = "⭐" * data.get("stars", 5)
-    caption = (f"НОВЫЙ ОТЗЫВ\nID: {rid}\nОт: {message.from_user.full_name}\n@{message.from_user.username}\nОценка: {stars_str}\nТекст: {message.text}")
+    caption = (f"{pe('star')} НОВЫЙ ОТЗЫВ\nID: {rid}\nОт: {message.from_user.full_name}\n@{message.from_user.username}\nОценка: {stars_str}\nТекст: {message.text}")
     try:
         if data.get("photo"): await bot.send_photo(ADMIN_ID, data["photo"], caption=caption, reply_markup=moderation_keyboard(rid))
         else: await bot.send_message(ADMIN_ID, caption, reply_markup=moderation_keyboard(rid))
-        await message.answer("🙏 Спасибо!", reply_markup=get_main_reply_keyboard())
+        await message.answer(f"{pe('heart')} Спасибо!", reply_markup=get_main_reply_keyboard())
     except Exception as e: logger.error(f"Review error: {e}")
     await state.clear()
 
@@ -1744,63 +1552,51 @@ async def process_review_text(message: types.Message, state: FSMContext):
 async def approve_review(callback: types.CallbackQuery):
     await callback.answer()
     rid = callback.data.replace("approve_", "")
-    reviews = load_reviews()
-    review = reviews.get(rid)
+    reviews = load_reviews(); review = reviews.get(rid)
     if not review: return
-    text = (f"⭐️ НОВЫЙ ОТЗЫВ\nПокупатель: @{review.get('username', '—')}\nОценка: {'⭐️' * review['stars']}\nОтзыв: {review['text']}\nКупить: @MaskYoY\nКанал: @owerpass_store")
+    text = (f"{pe('star')} НОВЫЙ ОТЗЫВ\nПокупатель: @{review.get('username', '—')}\nОценка: {'⭐️' * review['stars']}\nОтзыв: {review['text']}\nКупить: @MaskYoY\nКанал: @owerpass_store")
     try:
         if review.get("photo"): await bot.send_photo(CHANNEL_ID, review["photo"], caption=text)
         else: await bot.send_message(CHANNEL_ID, text)
-        await bot.send_message(review["user_id"], "🎉 Отзыв опубликован!")
-        review["status"] = "approved"
-        save_reviews(reviews)
-        if callback.message.caption: await callback.message.edit_caption(caption=callback.message.caption + "\n✅ ОПУБЛИКОВАН")
-        else: await callback.message.edit_text(callback.message.text + "\n✅ ОПУБЛИКОВАН")
+        await bot.send_message(review["user_id"], f"{pe('sparkle')} Отзыв опубликован!")
+        review["status"] = "approved"; save_reviews(reviews)
+        if callback.message.caption: await callback.message.edit_caption(caption=callback.message.caption + f"\n{pe('check')} ОПУБЛИКОВАН")
+        else: await callback.message.edit_text(callback.message.text + f"\n{pe('check')} ОПУБЛИКОВАН")
     except Exception as e: logger.error(f"Approve error: {e}")
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data.startswith("reject_"))
 async def reject_review(callback: types.CallbackQuery):
     await callback.answer()
     rid = callback.data.replace("reject_", "")
-    reviews = load_reviews()
-    review = reviews.get(rid)
+    reviews = load_reviews(); review = reviews.get(rid)
     if review:
-        review["status"] = "rejected"
-        save_reviews(reviews)
-        try: await bot.send_message(review["user_id"], "❌ Отзыв отклонён.")
+        review["status"] = "rejected"; save_reviews(reviews)
+        try: await bot.send_message(review["user_id"], f"{pe('cross')} Отзыв отклонён.")
         except: pass
 
 # ==================== ЗАКАЗЫ ПОЛЬЗОВАТЕЛЯ ====================
 @dp.callback_query(F.data == "my_orders")
 @dp.message(F.from_user.id != ADMIN_ID, F.text == "📋 Мои заказы")
 async def show_user_orders(event):
-    if isinstance(event, types.CallbackQuery):
-        await event.answer()
-        user_id = event.from_user.id
-        target = event.message
-    else:
-        user_id = event.from_user.id
-        target = event
-
+    if isinstance(event, types.CallbackQuery): await event.answer(); user_id = event.from_user.id; target = event.message
+    else: user_id = event.from_user.id; target = event
     orders = load_orders()
     user_orders = {k: v for k, v in orders.items() if v["user_id"] == user_id}
     if not user_orders:
-        text = "📋 У вас пока нет заказов"
+        text = f"{pe('cart')} У вас пока нет заказов"
         kb = main_menu_keyboard()
     else:
-        text = f"📋 ВАШИ ЗАКАЗЫ ({len(user_orders)})\n"
+        text = f"{pe('cart')} <b>ВАШИ ЗАКАЗЫ ({len(user_orders)})</b>\n"
         b = InlineKeyboardBuilder()
         for oid, order in sorted(user_orders.items(), reverse=True):
-            e, _ = STATUS_CONFIG.get(order["status"], ("❓", ""))
+            e, _ = STATUS_CONFIG.get(order["status"], (pe("warn"), ""))
             s = method_symbol(order.get("payment_method", "uah"))
             short = order.get("short_id", oid[:8])
             total = order["total"] if isinstance(order["total"], str) else f"{order['total']} {s}"
             text += f"{e} {short} | {order['product']} | {total}\n"
             ibtn(b, f"{short}", callback_data=f"order_detail_{oid}", icon_key="cart")
-        ibtn(b, "Меню", callback_data="main_menu", icon_key="warn", style="danger")
-        b.adjust(1)
-        kb = b.as_markup()
-
+        ibtn(b, "Меню", callback_data="main_menu", icon_key="back", style="danger")
+        b.adjust(1); kb = b.as_markup()
     try: await target.edit_text(text, reply_markup=kb)
     except: await target.answer(text, reply_markup=kb)
 
@@ -1808,55 +1604,39 @@ async def show_user_orders(event):
 async def show_order_detail(callback: types.CallbackQuery):
     await callback.answer()
     oid = callback.data.replace("order_detail_", "")
-    orders = load_orders()
-    rk = find_order_key(orders, oid)
-    if not rk: return await callback.answer("❌ Не найден", show_alert=True)
-    order = orders[rk]
-    e, st = STATUS_CONFIG.get(order["status"], ("❓", ""))
-    s = method_symbol(order.get("payment_method", "uah"))
-    short = order.get("short_id", rk[:8])
+    orders = load_orders(); rk = find_order_key(orders, oid)
+    if not rk: return await callback.answer(f"{pe('cross')} Не найден", show_alert=True)
+    order = orders[rk]; e, st = STATUS_CONFIG.get(order["status"], (pe("warn"), ""))
+    s = method_symbol(order.get("payment_method", "uah")); short = order.get("short_id", rk[:8])
     total = order["total"] if isinstance(order["total"], str) else f"{order['total']} {s}"
-
-    text = (f"📋 ЗАКАЗ {short}\nТовар: {order['product']}\nОплата: {method_label(order['payment_method'])}\nСумма: {total}\nСтатус: {e} {st}\n")
-    if order.get("phone"): text += f"📱 {order['phone']}\n"
-
+    text = (f"{pe('cart')} <b>ЗАКАЗ {short}</b>\nТовар: {order['product']}\nОплата: {method_label(order['payment_method'])}\nСумма: {total}\nСтатус: {e} {st}\n")
+    if order.get("phone"): text += f"{pe('phone')} {order['phone']}\n"
     if order["status"] == "completed": kb = user_order_actions_keyboard(rk)
     elif order["status"] == "awaiting_payment": kb = awaiting_payment_keyboard(rk)
     else:
         b = InlineKeyboardBuilder()
         ibtn(b, "Мои заказы", callback_data="my_orders", icon_key="cart")
-        ibtn(b, "Меню", callback_data="main_menu", icon_key="warn", style="danger")
-        b.adjust(1)
-        kb = b.as_markup()
-
+        ibtn(b, "Меню", callback_data="main_menu", icon_key="back", style="danger")
+        b.adjust(1); kb = b.as_markup()
     try: await callback.message.edit_text(text, reply_markup=kb)
     except: await callback.message.answer(text, reply_markup=kb)
 
 @dp.callback_query(F.data == "my_accounts")
 @dp.message(F.from_user.id != ADMIN_ID, F.text == "📦 Мои аккаунты")
 async def show_my_accounts(event):
-    if isinstance(event, types.CallbackQuery):
-        await event.answer()
-        user_id = event.from_user.id
-        target = event.message
-    else:
-        user_id = event.from_user.id
-        target = event
-
+    if isinstance(event, types.CallbackQuery): await event.answer(); user_id = event.from_user.id; target = event.message
+    else: user_id = event.from_user.id; target = event
     accounts = get_user_accounts(user_id)
     if not accounts:
-        text = "📦 У вас пока нет аккаунтов"
-        kb = main_menu_keyboard()
+        text = f"{pe('box')} У вас пока нет аккаунтов"; kb = main_menu_keyboard()
     else:
-        text = f"📦 ВАШИ АККАУНТЫ ({len(accounts)})\n\n"
+        text = f"{pe('box')} <b>ВАШИ АККАУНТЫ ({len(accounts)})</b>\n\n"
         b = InlineKeyboardBuilder()
         for acc in accounts:
-            text += f"🌍 {acc['country'].upper()} | 📱 {acc['phone']}\n"
-            ibtn(b, f"Код для {acc['phone']}", callback_data=f"request_code_for_{acc['country']}_{acc['session_name']}", icon_key="time")
-        ibtn(b, "Меню", callback_data="main_menu", icon_key="warn", style="danger")
-        b.adjust(1)
-        kb = b.as_markup()
-
+            text += f"{pe('globe')} {acc['country'].upper()} | {pe('phone')} {acc['phone']}\n"
+            ibtn(b, f"Код для {acc['phone']}", callback_data=f"request_code_for_{acc['country']}_{acc['session_name']}", icon_key="key")
+        ibtn(b, "Меню", callback_data="main_menu", icon_key="back", style="danger")
+        b.adjust(1); kb = b.as_markup()
     try: await target.edit_text(text, reply_markup=kb)
     except: await target.answer(text, reply_markup=kb)
 
@@ -1866,21 +1646,15 @@ async def request_code_for_account(callback: types.CallbackQuery):
     data = callback.data.replace("request_code_for_", "")
     if "_" not in data: return
     country, session_name = data.split("_", 1)
-
     meta = load_meta(country, session_name)
     phone = meta.get("phone") if meta else "—"
-
-    order_key = None
-    orders = load_orders()
+    order_key = None; orders = load_orders()
     for k, o in orders.items():
-        if o.get("session_name") == session_name and o.get("country_code") == country:
-            order_key = k
-            break
-
+        if o.get("session_name") == session_name and o.get("country_code") == country: order_key = k; break
     await callback.message.answer(
-        f"🔑 <b>Готово! Входи в Telegram.</b>\n\n"
-        f"📱 Номер: <code>{phone}</code>\n"
-        f"⏳ Как только Telegram пришлёт код — я сразу перешлю его сюда.\n"
+        f"{pe('key')} <b>Готово! Входи в Telegram.</b>\n\n"
+        f"{pe('phone')} Номер: <code>{phone}</code>\n"
+        f"{pe('time')} Как только Telegram пришлёт код — я сразу перешлю его сюда.\n"
         f"После успешного входа придёт подтверждение + кнопка отзыва.\n\n"
         f"<i>Держи этот чат открытым.</i>",
         reply_markup=user_order_actions_keyboard(order_key) if order_key else None
@@ -1891,89 +1665,79 @@ async def request_code_for_account(callback: types.CallbackQuery):
 async def user_replace(callback: types.CallbackQuery):
     await callback.answer()
     oid = callback.data.replace("user_replace_", "")
-    orders = load_orders()
-    rk = find_order_key(orders, oid)
-    if rk: await bot.send_message(ADMIN_ID, f"🔄 Замена: {orders[rk].get('short_id', rk)} от @{callback.from_user.username}")
-    await callback.message.answer("🔄 Запрос отправлен. @MaskYoY")
+    orders = load_orders(); rk = find_order_key(orders, oid)
+    if rk: await bot.send_message(ADMIN_ID, f"{pe('refresh')} Замена: {orders[rk].get('short_id', rk)} от @{callback.from_user.username}")
+    await callback.message.answer(f"{pe('refresh')} Запрос отправлен. @MaskYoY")
 
 @dp.callback_query(F.data.startswith("user_refund_"))
 async def user_refund(callback: types.CallbackQuery):
     await callback.answer()
     oid = callback.data.replace("user_refund_", "")
-    orders = load_orders()
-    rk = find_order_key(orders, oid)
-    if rk: await bot.send_message(ADMIN_ID, f"💰 Возврат: {orders[rk].get('short_id', rk)} от @{callback.from_user.username}")
-    await callback.message.answer("💰 Запрос отправлен. @MaskYoY")
+    orders = load_orders(); rk = find_order_key(orders, oid)
+    if rk: await bot.send_message(ADMIN_ID, f"{pe('money')} Возврат: {orders[rk].get('short_id', rk)} от @{callback.from_user.username}")
+    await callback.message.answer(f"{pe('money')} Запрос отправлен. @MaskYoY")
 
 # ==================== ПОДДЕРЖКА ====================
 @dp.callback_query(F.data.startswith("support_"))
 async def start_support(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
     oid = callback.data.replace("support_", "")
-    orders = load_orders()
-    rk = find_order_key(orders, oid)
+    orders = load_orders(); rk = find_order_key(orders, oid)
     if rk: oid = rk
     await state.update_data(support_order_id=oid)
     await state.set_state(SupportStates.chatting)
     close_kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="❌ Закрыть чат")]], resize_keyboard=True)
-    await callback.message.answer("🆘 Напишите сообщение продавцу.", reply_markup=close_kb)
+    await callback.message.answer(f"{pe('warn')} Напишите сообщение продавцу.", reply_markup=close_kb)
 
 @dp.message(SupportStates.chatting, F.text == "❌ Закрыть чат")
 async def close_support(message: types.Message, state: FSMContext):
     await state.clear()
-    await message.answer("❌ Закрыто", reply_markup=get_main_reply_keyboard())
+    await message.answer(f"{pe('cross')} Закрыто", reply_markup=get_main_reply_keyboard())
 
 @dp.message(SupportStates.chatting)
 async def relay_to_admin(message: types.Message, state: FSMContext):
-    data = await state.get_data()
-    oid = data.get("support_order_id", "—")
-    orders = load_orders()
-    rk = find_order_key(orders, oid)
+    data = await state.get_data(); oid = data.get("support_order_id", "—")
+    orders = load_orders(); rk = find_order_key(orders, oid)
     short = orders[rk].get("short_id", oid) if rk else oid
-    await bot.send_message(ADMIN_ID, f"🆘 @{message.from_user.username} | Заказ {short}")
+    await bot.send_message(ADMIN_ID, f"{pe('warn')} @{message.from_user.username} | Заказ {short}")
     fwd = await bot.copy_message(ADMIN_ID, message.chat.id, message.message_id)
-    relay = load_relay()
-    relay[str(fwd.message_id)] = message.from_user.id
-    save_relay(relay)
-    await message.answer("✅ Отправлено")
+    relay = load_relay(); relay[str(fwd.message_id)] = message.from_user.id; save_relay(relay)
+    await message.answer(f"{pe('check')} Отправлено")
 
 @dp.message(F.from_user.id == ADMIN_ID, F.reply_to_message)
 async def relay_admin_to_user(message: types.Message):
-    relay = load_relay()
-    uid = relay.get(str(message.reply_to_message.message_id))
+    relay = load_relay(); uid = relay.get(str(message.reply_to_message.message_id))
     if not uid: return
     try:
         await bot.copy_message(uid, message.chat.id, message.message_id)
-        await message.answer("✅ Доставлено")
-    except Exception as e: await message.answer(f"❌ {e}")
+        await message.answer(f"{pe('check')} Доставлено")
+    except Exception as e: await message.answer(f"{pe('cross')} {e}")
 
 # ==================== ЗАПРОС КОДА ====================
 @dp.callback_query(F.data.startswith("request_code_"))
 async def request_code_cb(callback: types.CallbackQuery):
     await callback.answer()
     oid = callback.data.replace("request_code_", "")
-    orders = load_orders()
-    rk = find_order_key(orders, oid)
+    orders = load_orders(); rk = find_order_key(orders, oid)
     if not rk: return
     order = orders[rk]
     country, session_name, phone = order["country_code"], order["session_name"], order["phone"]
-
     sess = watcher_path(country, session_name)
     if not os.path.exists(sess): sess = session_path(country, session_name)
-    if not os.path.exists(sess): return await callback.message.answer("❌ Файл сессии не найден. @MaskYoY")
-
-    await callback.message.answer(f"🔑 <b>Готово! Входи в Telegram.</b>\n\n📱 Номер: <code>{phone}</code>\n⏳ Как только Telegram пришлёт код — я сразу перешлю его сюда.\nПосле успешного входа придёт подтверждение + кнопка отзыва.\n\n<i>Держи этот чат открытым.</i>")
+    if not os.path.exists(sess): return await callback.message.answer(f"{pe('cross')} Файл сессии не найден. @MaskYoY")
+    await callback.message.answer(f"{pe('key')} <b>Готово! Входи в Telegram.</b>\n\n{pe('phone')} Номер: <code>{phone}</code>\n{pe('time')} Как только Telegram пришлёт код — я сразу перешлю его сюда.\nПосле успешного входа придёт подтверждение + кнопка отзыва.\n\n<i>Держи этот чат открытым.</i>")
     asyncio.create_task(start_code_watcher(country, session_name, callback.from_user.id, rk))
 
 # ==================== ПОЛЬЗОВАТЕЛЬСКИЕ КНОПКИ ====================
 @dp.message(F.from_user.id != ADMIN_ID, F.text == "🛍 Каталог")
 async def catalog_kb(message: types.Message, state: FSMContext):
-    if not await check_subscription(message.from_user.id): return await message.answer("⚠️ Подпишитесь!", reply_markup=subscribe_keyboard())
+    if not await check_subscription(message.from_user.id):
+        return await message.answer(f"{pe('warn')} Подпишитесь!", reply_markup=subscribe_keyboard())
     await state.clear()
-    await message.answer("📂 Категории:", reply_markup=catalog_keyboard())
+    await message.answer(f"{pe('cart')} Категории:", reply_markup=catalog_keyboard())
 
 @dp.message(F.from_user.id != ADMIN_ID, F.text == "💬 Отзывы")
-async def reviews_kb(message: types.Message): await message.answer("💬 Отзывы:", reply_markup=reviews_keyboard())
+async def reviews_kb(message: types.Message): await message.answer(f"{pe('chat')} Отзывы:", reply_markup=reviews_keyboard())
 
 @dp.message(F.from_user.id != ADMIN_ID, F.text == "❓ Частые вопросы")
 async def faq_kb(message: types.Message): await message.answer(FAQ_TEXT, reply_markup=get_main_reply_keyboard())
@@ -1981,8 +1745,8 @@ async def faq_kb(message: types.Message): await message.answer(FAQ_TEXT, reply_m
 @dp.message(F.from_user.id != ADMIN_ID, F.text == "📢 Наш Канал")
 async def channel_kb(message: types.Message):
     b = InlineKeyboardBuilder()
-    ibtn(b, "Перейти", url="http://t.me/owerpass_store", style="primary")
-    await message.answer("Наш канал:", reply_markup=b.as_markup())
+    ibtn(b, "Перейти", url="http://t.me/owerpass_store", icon_key="megaphone", style="primary")
+    await message.answer(f"{pe('megaphone')} Наш канал:", reply_markup=b.as_markup())
 
 @dp.message(F.from_user.id != ADMIN_ID, F.text == "👤 Профиль")
 async def profile_kb(message: types.Message): await show_profile(message)
@@ -1994,46 +1758,42 @@ async def profile_menu_cb(callback: types.CallbackQuery):
 
 async def show_profile(target, user_obj=None):
     if user_obj is None: user_obj = target.from_user
-    user_id = user_obj.id
-    level = get_user_level(user_id)
+    user_id = user_obj.id; level = get_user_level(user_id)
     orders = load_orders()
     completed = [o for o in orders.values() if o["user_id"] == user_id and o["status"] == "completed"]
     total_spent = sum(o.get("total", 0) for o in completed if not isinstance(o.get("total", 0), str))
-    referrals = load_referrals()
-    rdata = referrals.get(str(user_id), {})
+    referrals = load_referrals(); rdata = referrals.get(str(user_id), {})
     total_refs = len(rdata.get("referrals_list", []))
-
-    text = (f"👤 <b>Профиль</b>\n🆔 <code>{user_id}</code>\n👤 {user_obj.full_name}\n⭐ {level['emoji']} {level['name']} (-{level['discount']}%)\n💵 Потрачено: {total_spent:.2f}₴\n📦 Покупок: {len(completed)}\n👥 Рефералов: {total_refs}\n💸 Бонусы: {rdata.get('total_earned', 0):.2f}₴")
+    text = (f"{pe('user')} <b>Профиль</b>\n"
+            f"🆔 <code>{user_id}</code>\n"
+            f"{pe('user')} {user_obj.full_name}\n"
+            f"{pe('star')} {level['emoji']} {level['name']} (-{level['discount']}%)\n"
+            f"{pe('money')} Потрачено: {total_spent:.2f}₴\n"
+            f"{pe('cart')} Покупок: {len(completed)}\n"
+            f"{pe('gift')} Рефералов: {total_refs}\n"
+            f"{pe('money')} Бонусы: {rdata.get('total_earned', 0):.2f}₴")
     try: await target.edit_text(text, reply_markup=profile_keyboard())
     except: await target.answer(text, reply_markup=profile_keyboard())
 
 @dp.message(F.from_user.id != ADMIN_ID, F.text == "👥 Рефералы")
 @dp.callback_query(F.data == "referral_menu")
 async def referral_menu(event):
-    if isinstance(event, types.CallbackQuery):
-        await event.answer()
-        user_id = event.from_user.id
-        target = event.message
-    else:
-        user_id = event.from_user.id
-        target = event
-
-    referrals = load_referrals()
-    rdata = referrals.get(str(user_id), {})
+    if isinstance(event, types.CallbackQuery): await event.answer(); user_id = event.from_user.id; target = event.message
+    else: user_id = event.from_user.id; target = event
+    referrals = load_referrals(); rdata = referrals.get(str(user_id), {})
     if not rdata.get("referral_code"):
         code = hashlib.md5(f"{user_id}_ref_salt".encode()).hexdigest()[:8].upper()
         rdata["referral_code"] = code
-    rdata.setdefault("referrals_list", [])
-    rdata.setdefault("total_earned", 0)
-    referrals[str(user_id)] = rdata
-    save_referrals(referrals)
-
-    code = rdata["referral_code"]
-    bot_info = await bot.get_me()
+    rdata.setdefault("referrals_list", []); rdata.setdefault("total_earned", 0)
+    referrals[str(user_id)] = rdata; save_referrals(referrals)
+    code = rdata["referral_code"]; bot_info = await bot.get_me()
     link = f"https://t.me/{bot_info.username}?start=ref_{code}"
     bonus = get_setting("referral_bonus_percent", 5.0)
-
-    text = (f"👥 <b>Рефералы</b>\n🎁 Бонус: {bonus}%\n👤 Приглашено: {len(rdata['referrals_list'])}\n💸 Заработано: {rdata['total_earned']:.2f}₴\n\n🔗 <code>{link}</code>")
+    text = (f"{pe('gift')} <b>Рефералы</b>\n"
+            f"{pe('money')} Бонус: {bonus}%\n"
+            f"{pe('user')} Приглашено: {len(rdata['referrals_list'])}\n"
+            f"{pe('money')} Заработано: {rdata['total_earned']:.2f}₴\n\n"
+            f"{pe('link')} <code>{link}</code>")
     kb = referral_menu_keyboard()
     try: await target.edit_text(text, reply_markup=kb)
     except: await target.answer(text, reply_markup=kb)
@@ -2041,80 +1801,65 @@ async def referral_menu(event):
 @dp.callback_query(F.data == "referral_stats")
 async def referral_stats(callback: types.CallbackQuery):
     await callback.answer()
-    referrals = load_referrals()
-    rdata = referrals.get(str(callback.from_user.id), {})
+    referrals = load_referrals(); rdata = referrals.get(str(callback.from_user.id), {})
     reflist = rdata.get("referrals_list", [])
-    text = "📊 Детали:\n"
+    text = f"{pe('chart')} Детали:\n"
     if not reflist: text += "<i>Нет рефералов</i>"
     else:
         for r in reflist[-10:]:
-            st = "✅" if r.get("first_purchase_done") else "⏳"
+            st = pe("check") if r.get("first_purchase_done") else pe("time")
             text += f"{st} @{r.get('username', '—')}\n"
     b = InlineKeyboardBuilder()
-    ibtn(b, "Назад", callback_data="referral_menu", icon_key="warn", style="danger")
+    ibtn(b, "Назад", callback_data="referral_menu", icon_key="back", style="danger")
     await callback.message.edit_text(text, reply_markup=b.as_markup())
 
 @dp.message(F.from_user.id != ADMIN_ID, F.text == "🎟 Промокод")
 @dp.callback_query(F.data == "promo_menu")
 async def promo_menu(event, state: FSMContext = None):
-    if isinstance(event, types.CallbackQuery):
-        await event.answer()
-        target = event.message
-    else:
-        target = event
+    if isinstance(event, types.CallbackQuery): await event.answer(); target = event.message
+    else: target = event
     b = InlineKeyboardBuilder()
-    ibtn(b, "Назад", callback_data="main_menu", icon_key="warn", style="danger")
-    try: await target.edit_text("🎟 <b>Введите промокод</b>", reply_markup=b.as_markup())
-    except: await target.answer("🎟 <b>Введите промокод</b>", reply_markup=b.as_markup())
+    ibtn(b, "Назад", callback_data="main_menu", icon_key="back", style="danger")
+    try: await target.edit_text(f"{pe('ticket')} <b>Введите промокод</b>", reply_markup=b.as_markup())
+    except: await target.answer(f"{pe('ticket')} <b>Введите промокод</b>", reply_markup=b.as_markup())
     if state: await state.set_state(PromoStates.waiting_for_promo_code)
 
 @dp.message(PromoStates.waiting_for_promo_code, F.text)
 async def process_user_promo(message: types.Message, state: FSMContext):
     if message.from_user.id == ADMIN_ID: return
-    if message.text.startswith("/"):
-        await state.clear()
-        return
+    if message.text.startswith("/"): await state.clear(); return
     code = message.text.strip().upper()
-    promos = load_promo_codes()
-    p = promos.get(code)
+    promos = load_promo_codes(); p = promos.get(code)
     if not p:
-        await message.answer("❌ Не найден")
-        await state.clear()
-        return
+        await message.answer(f"{pe('cross')} Не найден"); await state.clear(); return
     if not p.get("is_active", True) or (p.get("max_uses") and p.get("current_uses", 0) >= p["max_uses"]):
-        await message.answer("❌ Неактивен")
-        await state.clear()
-        return
+        await message.answer(f"{pe('cross')} Неактивен"); await state.clear(); return
     if p.get("expires_at") and datetime.now() > datetime.fromisoformat(p["expires_at"]):
-        await message.answer("❌ Просрочен")
-        await state.clear()
-        return
-    await message.answer(f"✅ Промокод <code>{code}</code> принят!", reply_markup=main_menu_keyboard())
+        await message.answer(f"{pe('cross')} Просрочен"); await state.clear(); return
+    await message.answer(f"{pe('check')} Промокод <code>{code}</code> принят!", reply_markup=main_menu_keyboard())
     await state.clear()
 
 # ==================== КАТАЛОГ И ЗАКАЗ ====================
 @dp.callback_query(F.data == "main_menu")
 async def go_main(callback: types.CallbackQuery, state: FSMContext):
-    await callback.answer()
-    await state.clear()
+    await callback.answer(); await state.clear()
     try: await callback.message.edit_text("👋 Меню:", reply_markup=main_menu_keyboard())
     except: await callback.message.answer("👋 Меню:", reply_markup=main_menu_keyboard())
 
 @dp.callback_query(F.data == "menu_catalog")
 async def open_catalog(callback: types.CallbackQuery, state: FSMContext):
-    await callback.answer()
-    await state.clear()
-    try: await callback.message.edit_text("📂 Категории:", reply_markup=catalog_keyboard())
-    except: await callback.message.answer("📂 Категории:", reply_markup=catalog_keyboard())
+    await callback.answer(); await state.clear()
+    try: await callback.message.edit_text(f"{pe('cart')} Категории:", reply_markup=catalog_keyboard())
+    except: await callback.message.answer(f"{pe('cart')} Категории:", reply_markup=catalog_keyboard())
 
 @dp.callback_query(F.data == "menu_reviews")
 async def open_reviews(callback: types.CallbackQuery):
     await callback.answer()
-    try: await callback.message.edit_text("💬 Отзывы:", reply_markup=reviews_keyboard())
-    except: await callback.message.answer("💬 Отзывы:", reply_markup=reviews_keyboard())
+    try: await callback.message.edit_text(f"{pe('chat')} Отзывы:", reply_markup=reviews_keyboard())
+    except: await callback.message.answer(f"{pe('chat')} Отзывы:", reply_markup=reviews_keyboard())
 
 @dp.callback_query(F.data == "out_of_stock")
-async def out_of_stock(callback: types.CallbackQuery): await callback.answer("❌ Товар закончился", show_alert=True)
+async def out_of_stock(callback: types.CallbackQuery): await callback.answer(f"{pe('cross')} Товар закончился", show_alert=True)
 
 @dp.callback_query(F.data.startswith("cat_"))
 async def show_category(callback: types.CallbackQuery, state: FSMContext):
@@ -2129,19 +1874,14 @@ async def product_selected(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
     parts = callback.data.split("_")
     if len(parts) < 3: return
-    category = parts[1]
-    code = parts[2]
-
+    category = parts[1]; code = parts[2]
     product_name = None
     for pname, pdata in CATEGORIES[category]["products"].items():
-        if pdata.get("code") == code:
-            product_name = pname
-            break
-    if not product_name: return await callback.answer("❌ Не найден", show_alert=True)
-
+        if pdata.get("code") == code: product_name = pname; break
+    if not product_name: return await callback.answer(f"{pe('cross')} Не найден", show_alert=True)
     await state.update_data(category=category, product=product_name, code=code)
-    try: await callback.message.edit_text(f"✅ {product_name}\n🔢 Количество:", reply_markup=quantity_keyboard())
-    except: await callback.message.answer(f"✅ {product_name}\n🔢 Количество:", reply_markup=quantity_keyboard())
+    try: await callback.message.edit_text(f"{pe('check')} {product_name}\n🔢 Количество:", reply_markup=quantity_keyboard())
+    except: await callback.message.answer(f"{pe('check')} {product_name}\n🔢 Количество:", reply_markup=quantity_keyboard())
     await state.set_state(OrderStates.waiting_for_quantity)
 
 @dp.callback_query(OrderStates.waiting_for_quantity, F.data.startswith("qty_"))
@@ -2149,20 +1889,14 @@ async def process_quantity(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
     qty = int(callback.data.split("_")[1])
     await state.update_data(quantity=qty)
-    data = await state.get_data()
-    code = data["code"]
-
+    data = await state.get_data(); code = data["code"]
     avail = all_available(code)
     if not avail and data["category"] not in ("stars", "tiktok", "discord"):
-        await callback.message.edit_text("❌ Товар закончился", reply_markup=main_menu_keyboard())
-        await state.clear()
-        return
-
+        await callback.message.edit_text(f"{pe('cross')} Товар закончился", reply_markup=main_menu_keyboard())
+        await state.clear(); return
     price = avail[0]["price_uah"] if avail else CATEGORIES[data["category"]]["products"][data["product"]]["uah"]
-    await state.update_data(price_uah=price)
-    await state.update_data(base_price=price)
-
-    text = (f"📦 {data['product']}\n💰 {price}₴\n\nЕсть промокод? Введите его или нажмите 'Пропустить':")
+    await state.update_data(price_uah=price); await state.update_data(base_price=price)
+    text = (f"{pe('box')} {data['product']}\n{pe('money')} {price}₴\n\nЕсть промокод? Введите его или нажмите 'Пропустить':")
     kb = InlineKeyboardBuilder()
     ibtn(kb, "Пропустить промокод", callback_data="skip_promo", icon_key="check")
     kb.adjust(1)
@@ -2176,14 +1910,12 @@ async def skip_promo_code(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(used_promo_code=None)
     await state.update_data(discount_amount=0)
     await state.update_data(final_price=await get_final_price(state))
-    data = await state.get_data()
-    final_price = data.get("final_price")
-
-    text = f"💳 Способ оплаты:\nИтого к оплате: <b>{final_price}₴</b>"
+    data = await state.get_data(); final_price = data.get("final_price")
+    text = f"{pe('card')} Способ оплаты:\nИтого к оплате: <b>{final_price}₴</b>"
     kb = InlineKeyboardBuilder()
     ibtn(kb, "Оплатить подарком", callback_data="pay_gift", icon_key="gift")
     ibtn(kb, "Оплатить гривнами", callback_data="pay_uah", icon_key="money", style="primary")
-    ibtn(kb, "Отмена", callback_data="main_menu", icon_key="warn", style="danger")
+    ibtn(kb, "Отмена", callback_data="main_menu", icon_key="cross", style="danger")
     kb.adjust(1)
     try: await callback.message.edit_text(text, reply_markup=kb.as_markup())
     except: await callback.message.answer(text, reply_markup=kb.as_markup())
@@ -2192,45 +1924,37 @@ async def skip_promo_code(callback: types.CallbackQuery, state: FSMContext):
 @dp.message(OrderStates.waiting_for_promo_input, F.text)
 async def process_promo_input(message: types.Message, state: FSMContext):
     code = message.text.strip().upper()
-    promos = load_promo_codes()
-    p = promos.get(code)
-
-    valid = False
-    discount_amount = 0
+    promos = load_promo_codes(); p = promos.get(code)
+    valid = False; discount_amount = 0
     if p and p.get("is_active", True):
-        max_uses = p.get("max_uses")
-        current_uses = p.get("current_uses", 0)
+        max_uses = p.get("max_uses"); current_uses = p.get("current_uses", 0)
         if not max_uses or current_uses < max_uses:
             if not p.get("expires_at") or datetime.now() < datetime.fromisoformat(p["expires_at"]):
                 valid = True
                 base_price = (await state.get_data()).get("base_price", 0)
                 if p["discount_type"] == "percent": discount_amount = round(base_price * (p["discount_value"] / 100), 2)
                 else: discount_amount = min(p["discount_value"], base_price)
-
     if valid:
         await state.update_data(used_promo_code=code)
         await state.update_data(discount_amount=discount_amount)
         await state.update_data(final_price=await get_final_price(state))
-        await message.answer(f"✅ Промокод <code>{code}</code> применен!\nСкидка: -{discount_amount}₴")
+        await message.answer(f"{pe('check')} Промокод <code>{code}</code> применен!\nСкидка: -{discount_amount}₴")
         await show_payment_methods_after_promo(message, state)
     else:
-        await message.answer("❌ Промокод недействителен, истек или исчерпан. Попробуйте другой или пропустите.")
+        await message.answer(f"{pe('cross')} Промокод недействителен, истек или исчерпан. Попробуйте другой или пропустите.")
 
 async def get_final_price(state: FSMContext):
     data = await state.get_data()
-    base_price = data.get("base_price", 0)
-    discount = data.get("discount_amount", 0)
-    return max(0, base_price - discount)
+    return max(0, data.get("base_price", 0) - data.get("discount_amount", 0))
 
 async def show_payment_methods_after_promo(message: types.Message, state: FSMContext):
     data = await state.get_data()
     final_price = data.get("final_price", data.get("price_uah"))
-
-    text = f"💳 Способ оплаты:\nИтого к оплате: <b>{final_price}₴</b>"
+    text = f"{pe('card')} Способ оплаты:\nИтого к оплате: <b>{final_price}₴</b>"
     kb = InlineKeyboardBuilder()
     ibtn(kb, "Оплатить подарком", callback_data="pay_gift", icon_key="gift")
     ibtn(kb, "Оплатить гривнами", callback_data="pay_uah", icon_key="money", style="primary")
-    ibtn(kb, "Отмена", callback_data="main_menu", icon_key="warn", style="danger")
+    ibtn(kb, "Отмена", callback_data="main_menu", icon_key="cross", style="danger")
     kb.adjust(1)
     await message.answer(text, reply_markup=kb.as_markup())
     await state.set_state(OrderStates.waiting_for_payment_method)
@@ -2243,9 +1967,8 @@ async def process_payment_method(callback: types.CallbackQuery, state: FSMContex
     data = await state.get_data()
     final_price = data.get("final_price", data.get("price_uah"))
     used_promo = data.get("used_promo_code")
-    promo_text = f"🎟 Промокод: <code>{used_promo}</code>\n" if used_promo else ""
-
-    text = (f"📋 Подтверждение\nТовар: {data['product']}\nОплата: {'🎁 Подарок' if method == 'gift' else '💳 Гривны'}\n{promo_text}Сумма: {final_price}₴\n\nПодтвердить?")
+    promo_text = f"{pe('ticket')} Промокод: <code>{used_promo}</code>\n" if used_promo else ""
+    text = (f"{pe('cart')} <b>Подтверждение</b>\nТовар: {data['product']}\nОплата: {'🎁 Подарок' if method == 'gift' else '💳 Гривны'}\n{promo_text}Сумма: {final_price}₴\n\nПодтвердить?")
     try: await callback.message.edit_text(text, reply_markup=confirm_order_keyboard())
     except: await callback.message.answer(text, reply_markup=confirm_order_keyboard())
     await state.set_state(OrderStates.waiting_for_confirmation)
@@ -2256,21 +1979,17 @@ async def confirm_order(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     category, product, code = data["category"], data["product"], data["code"]
     method, used_promo, final_price = data["payment_method"], data.get("used_promo_code"), data.get("final_price")
-
     acc = None
     if category not in ("stars", "tiktok", "discord"):
         acc = reserve_account(code, callback.from_user.id)
         if not acc:
-            await callback.message.edit_text("❌ Товар закончился!", reply_markup=main_menu_keyboard())
-            await state.clear()
-            return
-
+            await callback.message.edit_text(f"{pe('cross')} Товар закончился!", reply_markup=main_menu_keyboard())
+            await state.clear(); return
     short_id = generate_short_order_id()
     if used_promo:
         promos = load_promo_codes()
         if used_promo in promos: promos[used_promo]["current_uses"] = promos[used_promo].get("current_uses", 0) + 1
         save_promo_codes(promos)
-
     orders = load_orders()
     orders[short_id] = {
         "order_id": short_id, "short_id": short_id,
@@ -2284,16 +2003,26 @@ async def confirm_order(callback: types.CallbackQuery, state: FSMContext):
         "status": "awaiting_payment", "created_at": datetime.now().isoformat(), "reviewed": False,
     }
     save_orders(orders)
-
     try:
         await bot.send_message(ADMIN_ID,
-            f"🆕 <b>НОВЫЙ ЗАКАЗ {short_id}</b>\n\n👤 @{callback.from_user.username} | {callback.from_user.full_name}\n🆔 <code>{callback.from_user.id}</code>\n🌍 {acc['country'].upper() if acc else code} | 📱 {acc['phone'] if acc else '—'}\n💰 {final_price}₴ | {'🎁 Подарок' if method == 'gift' else '💳 Гривны'}\n{'🎟 Промо: ' + used_promo if used_promo else ''}\n\nПодтвердите оплату в <b>📋 Все заказы</b>",
+            f"{pe('sparkle')} <b>НОВЫЙ ЗАКАЗ {short_id}</b>\n\n"
+            f"{pe('user')} @{callback.from_user.username} | {callback.from_user.full_name}\n"
+            f"🆔 <code>{callback.from_user.id}</code>\n"
+            f"{pe('globe')} {acc['country'].upper() if acc else code} | {pe('phone')} {acc['phone'] if acc else '—'}\n"
+            f"{pe('money')} {final_price}₴ | {'🎁 Подарок' if method == 'gift' else '💳 Гривны'}\n"
+            f"{pe('ticket') + ' Промо: ' + used_promo if used_promo else ''}\n\n"
+            f"Подтвердите оплату в <b>{pe('cart')} Все заказы</b>",
             reply_markup=InlineKeyboardBuilder().button(text="📋 Открыть заказ", callback_data=f"admin_order_detail_{short_id}").as_markup())
     except Exception as e: logger.error(f"Admin notify error: {e}")
-
     requisites = get_requisites("uah" if method == "uah" else "gift")
     await callback.message.edit_text(
-        f"✅ <b>Заказ {short_id} создан!</b>\n\n🌍 {acc['country'].upper() if acc else code}\n📱 {acc['phone'] if acc else '—'}\n💰 <b>{final_price}₴</b>\n💳 Способ: {'🎁 Подарок' if method == 'gift' else '💳 Гривны'}\n\n<b>РЕКВИЗИТЫ:</b>\n{requisites}\n\nПосле оплаты напишите @MaskYoY и пришлите чек.",
+        f"{pe('check')} <b>Заказ {short_id} создан!</b>\n\n"
+        f"{pe('globe')} {acc['country'].upper() if acc else code}\n"
+        f"{pe('phone')} {acc['phone'] if acc else '—'}\n"
+        f"{pe('money')} <b>{final_price}₴</b>\n"
+        f"{pe('card')} Способ: {'🎁 Подарок' if method == 'gift' else '💳 Гривны'}\n\n"
+        f"<b>РЕКВИЗИТЫ:</b>\n{requisites}\n\n"
+        f"После оплаты напишите @MaskYoY и пришлите чек.",
         reply_markup=awaiting_payment_keyboard(short_id))
     await state.clear()
 
@@ -2303,31 +2032,31 @@ async def admin_dashboard_cmd(message: types.Message): await show_dashboard(mess
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_dashboard_refresh")
 async def dashboard_refresh(callback: types.CallbackQuery):
-    await callback.answer()
-    await show_dashboard(callback.message, edit=True)
+    await callback.answer(); await show_dashboard(callback.message, edit=True)
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_orders_dashboard")
 async def orders_dashboard(callback: types.CallbackQuery):
-    await callback.answer()
-    await show_admin_orders_page(callback.message, 0, edit=True)
+    await callback.answer(); await show_admin_orders_page(callback.message, 0, edit=True)
 
 async def show_dashboard(target, edit=False):
-    orders = load_orders()
-    users = load_users()
-    counts = stock_count()
-    now = datetime.now()
-    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    orders = load_orders(); users = load_users(); counts = stock_count()
+    now = datetime.now(); today = now.replace(hour=0, minute=0, second=0, microsecond=0)
     rev_today, total_rev, completed = 0, 0, 0
     for o in orders.values():
         if o["status"] == "completed" and not isinstance(o.get("total", 0), str):
-            total_rev += o["total"]
-            completed += 1
+            total_rev += o["total"]; completed += 1
             if o.get("completed_at"):
                 try:
                     if datetime.fromisoformat(o["completed_at"]) >= today: rev_today += o["total"]
                 except: pass
     new_today = sum(1 for u in users.values() if u.get("first_seen") and datetime.fromisoformat(u["first_seen"]) >= today)
-    text = (f"📊 <b>ПАНЕЛЬ</b>\n💰 Сегодня: {rev_today:.2f}₴\n💰 Всего: {total_rev:.2f}₴\n👥 Новых: {new_today}\n📦 Выполнено: {completed}/{len(orders)}\n📦 Склад: {sum(counts.values())} акк.\n👤 Юзеров: {len(users)}")
+    text = (f"{pe('chart')} <b>ПАНЕЛЬ</b>\n"
+            f"{pe('money')} Сегодня: {rev_today:.2f}₴\n"
+            f"{pe('money')} Всего: {total_rev:.2f}₴\n"
+            f"{pe('user')} Новых: {new_today}\n"
+            f"{pe('cart')} Выполнено: {completed}/{len(orders)}\n"
+            f"{pe('box')} Склад: {sum(counts.values())} акк.\n"
+            f"{pe('user')} Юзеров: {len(users)}")
     kb = admin_dashboard_keyboard()
     if edit:
         try: await target.edit_text(text, reply_markup=kb)
@@ -2338,21 +2067,16 @@ async def show_dashboard(target, edit=False):
 @dp.message(F.from_user.id == ADMIN_ID, F.text == "⭐ Уровни")
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_levels_dashboard")
 async def admin_levels(event):
-    if isinstance(event, types.CallbackQuery):
-        await event.answer()
-        target = event.message
-        edit = True
-    else:
-        target = event
-        edit = False
+    if isinstance(event, types.CallbackQuery): await event.answer(); target = event.message; edit = True
+    else: target = event; edit = False
     levels = {
-        "Бронза": ("🥉", get_setting("level_bronze_min", 0), get_setting("level_bronze_discount", 0)),
-        "Серебро": ("🥈", get_setting("level_silver_min", 500), get_setting("level_silver_discount", 3)),
-        "Золото": ("🥇", get_setting("level_gold_min", 1500), get_setting("level_gold_discount", 5)),
-        "Платина": ("💎", get_setting("level_platinum_min", 3000), get_setting("level_platinum_discount", 7)),
-        "VIP": ("👑", get_setting("level_vip_min", 5000), get_setting("level_vip_discount", 10)),
+        "Бронза": (pe("medal3"), get_setting("level_bronze_min", 0), get_setting("level_bronze_discount", 0)),
+        "Серебро": (pe("medal2"), get_setting("level_silver_min", 500), get_setting("level_silver_discount", 3)),
+        "Золото": (pe("medal1"), get_setting("level_gold_min", 1500), get_setting("level_gold_discount", 5)),
+        "Платина": (pe("diamond"), get_setting("level_platinum_min", 3000), get_setting("level_platinum_discount", 7)),
+        "VIP": (pe("crown"), get_setting("level_vip_min", 5000), get_setting("level_vip_discount", 10)),
     }
-    text = "⭐ Уровни:\n"
+    text = f"{pe('star')} Уровни:\n"
     for n, (e, m, d) in levels.items(): text += f"{e} {n}: от {m}₴ (-{d}%)\n"
     kb = admin_levels_keyboard()
     if edit:
@@ -2368,152 +2092,118 @@ async def admin_edit_level(callback: types.CallbackQuery, state: FSMContext):
     b = InlineKeyboardBuilder()
     ibtn(b, "Порог", callback_data="edit_level_min", icon_key="money")
     ibtn(b, "Скидка", callback_data="edit_level_discount", icon_key="gift")
-    ibtn(b, "Назад", callback_data="admin_levels_dashboard", icon_key="warn", style="danger")
+    ibtn(b, "Назад", callback_data="admin_levels_dashboard", icon_key="back", style="danger")
     b.adjust(1)
     await callback.message.edit_text(f"Уровень {LEVEL_KEYS.get(key, key)}:", reply_markup=b.as_markup())
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "edit_level_min")
 async def edit_level_min(callback: types.CallbackQuery, state: FSMContext):
-    await callback.answer()
-    await state.update_data(edit_field="min_spent")
+    await callback.answer(); await state.update_data(edit_field="min_spent")
     await callback.message.edit_text("Введите новый порог:")
     await state.set_state(AdminLevelStates.waiting_for_min_spent)
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "edit_level_discount")
 async def edit_level_discount(callback: types.CallbackQuery, state: FSMContext):
-    await callback.answer()
-    await state.update_data(edit_field="discount")
+    await callback.answer(); await state.update_data(edit_field="discount")
     await callback.message.edit_text("Введите скидку %:")
     await state.set_state(AdminLevelStates.waiting_for_discount)
 
 @dp.message(AdminLevelStates.waiting_for_min_spent, F.text)
 async def save_level_min(message: types.Message, state: FSMContext):
     try: v = float(message.text)
-    except:
-        await message.answer("❌ Число")
-        return
-    data = await state.get_data()
-    key = data.get("edit_level", "bronze")
-    s = load_settings()
-    s[f"level_{key}_min"] = v
-    save_settings(s)
-    await message.answer(f"✅ Порог: {v}₴", reply_markup=get_admin_reply_keyboard())
-    await state.clear()
+    except: await message.answer(f"{pe('cross')} Число"); return
+    data = await state.get_data(); key = data.get("edit_level", "bronze")
+    s = load_settings(); s[f"level_{key}_min"] = v; save_settings(s)
+    await message.answer(f"{pe('check')} Порог: {v}₴", reply_markup=get_admin_reply_keyboard()); await state.clear()
 
 @dp.message(AdminLevelStates.waiting_for_discount, F.text)
 async def save_level_disc(message: types.Message, state: FSMContext):
     try:
         v = float(message.text)
         if not (0 <= v <= 100): raise ValueError
-    except:
-        await message.answer("❌ 0-100")
-        return
-    data = await state.get_data()
-    key = data.get("edit_level", "bronze")
-    s = load_settings()
-    s[f"level_{key}_discount"] = v
-    save_settings(s)
-    await message.answer(f"✅ Скидка: {v}%", reply_markup=get_admin_reply_keyboard())
-    await state.clear()
+    except: await message.answer(f"{pe('cross')} 0-100"); return
+    data = await state.get_data(); key = data.get("edit_level", "bronze")
+    s = load_settings(); s[f"level_{key}_discount"] = v; save_settings(s)
+    await message.answer(f"{pe('check')} Скидка: {v}%", reply_markup=get_admin_reply_keyboard()); await state.clear()
 
 # ==================== АДМИН: АНАЛИТИКА ====================
 @dp.message(F.from_user.id == ADMIN_ID, F.text == "📊 Аналитика")
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_analytics_dashboard")
 async def admin_analytics(event):
-    if isinstance(event, types.CallbackQuery):
-        await event.answer()
-        target = event.message
-        edit = True
-    else:
-        target = event
-        edit = False
+    if isinstance(event, types.CallbackQuery): await event.answer(); target = event.message; edit = True
+    else: target = event; edit = False
     kb = admin_analytics_keyboard()
     if edit:
-        try: await target.edit_text("📊 Аналитика:", reply_markup=kb)
-        except: await target.answer("📊 Аналитика:", reply_markup=kb)
-    else: await target.answer("📊 Аналитика:", reply_markup=kb)
+        try: await target.edit_text(f"{pe('chart')} Аналитика:", reply_markup=kb)
+        except: await target.answer(f"{pe('chart')} Аналитика:", reply_markup=kb)
+    else: await target.answer(f"{pe('chart')} Аналитика:", reply_markup=kb)
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_analytics_by_days")
 async def anal_days(callback: types.CallbackQuery):
     await callback.answer()
-    orders = load_orders()
-    now = datetime.now()
-    data = {}
+    orders = load_orders(); now = datetime.now(); data = {}
     for i in range(30):
-        d = (now - timedelta(days=i)).strftime("%d.%m")
-        data[d] = {"rev": 0, "n": 0}
+        d = (now - timedelta(days=i)).strftime("%d.%m"); data[d] = {"rev": 0, "n": 0}
     for o in orders.values():
         if o["status"] == "completed" and o.get("completed_at"):
             try:
                 dt = datetime.fromisoformat(o["completed_at"])
                 if (now - dt).days < 30 and not isinstance(o.get("total", 0), str):
                     d = dt.strftime("%d.%m")
-                    if d in data:
-                        data[d]["rev"] += o["total"]
-                        data[d]["n"] += 1
+                    if d in data: data[d]["rev"] += o["total"]; data[d]["n"] += 1
             except: pass
-    text = "📈 По дням:\n"
+    text = f"{pe('chart_up')} По дням:\n"
     for d in reversed(list(data.keys())):
-        if data[d]["rev"] > 0: text += f"📅 {d}: {data[d]['rev']:.2f}₴ ({data[d]['n']})\n"
+        if data[d]["rev"] > 0: text += f"{pe('calendar')} {d}: {data[d]['rev']:.2f}₴ ({data[d]['n']})\n"
     b = InlineKeyboardBuilder()
-    ibtn(b, "Назад", callback_data="admin_analytics_dashboard", icon_key="warn", style="danger")
+    ibtn(b, "Назад", callback_data="admin_analytics_dashboard", icon_key="back", style="danger")
     await callback.message.edit_text(text, reply_markup=b.as_markup())
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_analytics_by_hours")
 async def anal_hours(callback: types.CallbackQuery):
     await callback.answer()
-    orders = load_orders()
-    h = {i: {"rev": 0, "n": 0} for i in range(24)}
+    orders = load_orders(); h = {i: {"rev": 0, "n": 0} for i in range(24)}
     for o in orders.values():
         if o["status"] == "completed" and o.get("completed_at"):
             try:
                 dt = datetime.fromisoformat(o["completed_at"])
-                if not isinstance(o.get("total", 0), str):
-                    h[dt.hour]["rev"] += o["total"]
-                    h[dt.hour]["n"] += 1
+                if not isinstance(o.get("total", 0), str): h[dt.hour]["rev"] += o["total"]; h[dt.hour]["n"] += 1
             except: pass
-    text = "⏰ По часам:\n"
+    text = f"{pe('time')} По часам:\n"
     for i in range(24):
-        if h[i]["n"] > 0: text += f"{i:02d}:00 — {h[i]['rev']:.2f}₴ ({h[i]['n']})\n"
+        if h[i]["n"] > 0: text += f"{pe('time')} {i:02d}:00 — {h[i]['rev']:.2f}₴ ({h[i]['n']})\n"
     b = InlineKeyboardBuilder()
-    ibtn(b, "Назад", callback_data="admin_analytics_dashboard", icon_key="warn", style="danger")
+    ibtn(b, "Назад", callback_data="admin_analytics_dashboard", icon_key="back", style="danger")
     await callback.message.edit_text(text, reply_markup=b.as_markup())
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_analytics_by_country")
 async def anal_country(callback: types.CallbackQuery):
     await callback.answer()
-    orders = load_orders()
-    stats = {}
+    orders = load_orders(); stats = {}
     for o in orders.values():
         if o["status"] == "completed":
-            c = o.get("country_code", "??")
-            stats.setdefault(c, {"rev": 0, "n": 0})
+            c = o.get("country_code", "??"); stats.setdefault(c, {"rev": 0, "n": 0})
             if not isinstance(o.get("total", 0), str): stats[c]["rev"] += o["total"]
             stats[c]["n"] += 1
-    text = "🌍 По странам:\n"
-    for c, d in sorted(stats.items(), key=lambda x: -x[1]["rev"]): text += f"• {c.upper()}: {d['rev']:.2f}₴ ({d['n']})\n"
+    text = f"{pe('globe')} По странам:\n"
+    for c, d in sorted(stats.items(), key=lambda x: -x[1]["rev"]): text += f"{pe('globe')} {c.upper()}: {d['rev']:.2f}₴ ({d['n']})\n"
     b = InlineKeyboardBuilder()
-    ibtn(b, "Назад", callback_data="admin_analytics_dashboard", icon_key="warn", style="danger")
+    ibtn(b, "Назад", callback_data="admin_analytics_dashboard", icon_key="back", style="danger")
     await callback.message.edit_text(text, reply_markup=b.as_markup())
 
 # ==================== АДМИН: ИСТОЧНИКИ ====================
 @dp.message(F.from_user.id == ADMIN_ID, F.text == "🔗 Источники")
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_traffic_dashboard")
 async def admin_traffic(event):
-    if isinstance(event, types.CallbackQuery):
-        await event.answer()
-        target = event.message
-        edit = True
-    else:
-        target = event
-        edit = False
-    sources = load_traffic_sources()
-    text = "🔗 Источники:\n"
+    if isinstance(event, types.CallbackQuery): await event.answer(); target = event.message; edit = True
+    else: target = event; edit = False
+    sources = load_traffic_sources(); text = f"{pe('link')} Источники:\n"
     if not sources: text += "<i>Нет данных</i>"
     else:
-        for name, d in sorted(sources.items(), key=lambda x: -x[1].get("total_revenue", 0)): text += f"📍 {name}: {d.get('total_revenue', 0):.2f}₴\n"
+        for name, d in sorted(sources.items(), key=lambda x: -x[1].get("total_revenue", 0)):
+            text += f"{pe('pin')} {name}: {d.get('total_revenue', 0):.2f}₴\n"
     b = InlineKeyboardBuilder()
-    ibtn(b, "Назад", callback_data="admin_dashboard_refresh", icon_key="warn", style="danger")
+    ibtn(b, "Назад", callback_data="admin_dashboard_refresh", icon_key="back", style="danger")
     if edit:
         try: await target.edit_text(text, reply_markup=b.as_markup())
         except: await target.answer(text, reply_markup=b.as_markup())
@@ -2523,18 +2213,12 @@ async def admin_traffic(event):
 @dp.message(F.from_user.id == ADMIN_ID, F.text == "👥 Рефералы")
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_referrals_dashboard")
 async def admin_referrals(event):
-    if isinstance(event, types.CallbackQuery):
-        await event.answer()
-        target = event.message
-        edit = True
-    else:
-        target = event
-        edit = False
-    referrals = load_referrals()
-    bonus = get_setting("referral_bonus_percent", 5.0)
+    if isinstance(event, types.CallbackQuery): await event.answer(); target = event.message; edit = True
+    else: target = event; edit = False
+    referrals = load_referrals(); bonus = get_setting("referral_bonus_percent", 5.0)
     total = sum(len(r.get("referrals_list", [])) for r in referrals.values())
     earned = sum(r.get("total_earned", 0) for r in referrals.values())
-    text = f"👥 Рефералы\n💰 Бонус: {bonus}%\n👥 Всего: {total}\n💸 {earned:.2f}₴\n"
+    text = f"{pe('gift')} Рефералы\n{pe('money')} Бонус: {bonus}%\n{pe('user')} Всего: {total}\n{pe('money')} {earned:.2f}₴\n"
     kb = admin_referrals_settings_keyboard()
     if edit:
         try: await target.edit_text(text, reply_markup=kb)
@@ -2553,23 +2237,18 @@ async def save_bonus(message: types.Message, state: FSMContext):
     try:
         v = float(message.text)
         if not (0 <= v <= 100): raise ValueError
-    except:
-        await message.answer("❌ 0-100")
-        return
-    s = load_settings()
-    s["referral_bonus_percent"] = v
-    save_settings(s)
-    await message.answer(f"✅ {v}%", reply_markup=get_admin_reply_keyboard())
-    await state.clear()
+    except: await message.answer(f"{pe('cross')} 0-100"); return
+    s = load_settings(); s["referral_bonus_percent"] = v; save_settings(s)
+    await message.answer(f"{pe('check')} {v}%", reply_markup=get_admin_reply_keyboard()); await state.clear()
 
 # ==================== АДМИН: ПОЛЬЗОВАТЕЛИ / ЧАТ ====================
 @dp.message(F.from_user.id == ADMIN_ID, F.text == "👤 Пользователи")
 async def admin_users_list(message: types.Message):
     users = load_users()
-    if not users: return await message.answer("📋 Нет", reply_markup=get_admin_reply_keyboard())
-    text = f"👤 ВСЕГО: {len(users)}\n"
+    if not users: return await message.answer(f"{pe('cart')} Нет", reply_markup=get_admin_reply_keyboard())
+    text = f"{pe('user')} ВСЕГО: {len(users)}\n"
     for uid, u in sorted(users.items(), key=lambda x: x[1].get("first_seen", ""), reverse=True)[:10]:
-        text += f"👤 {u.get('full_name', '—')} (@{u.get('username', '—')})\nID: {uid}\n"
+        text += f"{pe('user')} {u.get('full_name', '—')} (@{u.get('username', '—')})\nID: {uid}\n"
     if len(users) > 10: text += f"...и ещё {len(users) - 10}"
     await message.answer(text, reply_markup=get_admin_reply_keyboard())
 
@@ -2580,28 +2259,22 @@ async def admin_main_menu(message: types.Message): await message.answer("🏠", 
 async def admin_chat_start(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
     oid = callback.data.replace("admin_chat_with_user_", "")
-    orders = load_orders()
-    rk = find_order_key(orders, oid)
+    orders = load_orders(); rk = find_order_key(orders, oid)
     if not rk: return
     await state.update_data(admin_chat_order_id=rk)
-    await callback.message.answer(f"💬 Введите сообщение покупателю:")
+    await callback.message.answer(f"{pe('chat')} Введите сообщение покупателю:")
     await state.set_state(AdminChatStates.waiting_for_message)
 
 @dp.message(AdminChatStates.waiting_for_message, F.text)
 async def admin_chat_send(message: types.Message, state: FSMContext):
-    data = await state.get_data()
-    oid = data.get("admin_chat_order_id")
-    orders = load_orders()
-    rk = find_order_key(orders, oid)
-    if not rk:
-        await message.answer("❌")
-        await state.clear()
-        return
+    data = await state.get_data(); oid = data.get("admin_chat_order_id")
+    orders = load_orders(); rk = find_order_key(orders, oid)
+    if not rk: await message.answer(f"{pe('cross')}"); await state.clear(); return
     order = orders[rk]
     try:
-        await bot.send_message(order["user_id"], f"💬 Админ:\n{message.text}")
-        await message.answer("✅", reply_markup=get_admin_reply_keyboard())
-    except Exception as e: await message.answer(f"❌ {e}", reply_markup=get_admin_reply_keyboard())
+        await bot.send_message(order["user_id"], f"{pe('chat')} Админ:\n{message.text}")
+        await message.answer(f"{pe('check')}", reply_markup=get_admin_reply_keyboard())
+    except Exception as e: await message.answer(f"{pe('cross')} {e}", reply_markup=get_admin_reply_keyboard())
     await state.clear()
 
 # ==================== ОШИБКИ ====================
@@ -2613,14 +2286,12 @@ async def error_handler(event):
 # ==================== ЗАПУСК ====================
 async def main():
     print("=" * 50)
-    print("OverPass Store Bot v5")
+    print("OverPass Store Bot v6 (premium emoji everywhere)")
     print("=" * 50)
     print("[BACKUP] Восстановление из переменных окружения...")
     restore_from_env()
-
     await bot.delete_webhook(drop_pending_updates=True)
     await asyncio.sleep(1)
-
     if os.path.exists(ACCOUNTS_DIR):
         for c in os.listdir(ACCOUNTS_DIR):
             cd = country_dir(c)
@@ -2629,27 +2300,17 @@ async def main():
                 if f.endswith(".json"):
                     meta = load_meta(c, f.replace(".json", ""))
                     if meta and meta.get("sold_to"):
-                        order_key = None
-                        orders = load_orders()
+                        order_key = None; orders = load_orders()
                         for k, o in orders.items():
                             if o.get("session_name") == meta["session_name"] and o.get("country_code") == c:
-                                order_key = k
-                                break
+                                order_key = k; break
                         asyncio.create_task(start_code_watcher(c, meta["session_name"], meta["sold_to"], order_key))
-
     print("Бот запущен!")
-    try:
-        await dp.start_polling(bot, drop_pending_updates=True)
-    except Exception as e:
-        print(f"Ошибка: {e}")
-    finally:
-        await bot.session.close()
+    try: await dp.start_polling(bot, drop_pending_updates=True)
+    except Exception as e: print(f"Ошибка: {e}")
+    finally: await bot.session.close()
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("Остановлен")
-    except Exception as e:
-        print(f"Ошибка запуска: {e}")
-        sys.exit(1)
+    try: asyncio.run(main())
+    except KeyboardInterrupt: print("Остановлен")
+    except Exception as e: print(f"Ошибка запуска: {e}"); sys.exit(1)

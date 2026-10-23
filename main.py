@@ -90,6 +90,9 @@ def pe(key: str) -> str:
 def eid(key: str):
     return EMOJI.get(key, (None, ""))[0]
 
+def esym(key: str):
+    return EMOJI.get(key, (None, ""))[1]
+
 def ibtn(builder, text, callback_data=None, url=None, icon_key=None, style=None):
     kw = {"text": text}
     if callback_data is not None: kw["callback_data"] = callback_data
@@ -396,7 +399,9 @@ async def start_code_watcher(c, n, uid, order_key=None):
 
 # ==================== НАСТРОЙКИ ====================
 DEFAULT_SETTINGS = {
-    "referral_bonus_percent": 5.0, "partner_commission_percent": 20.0,
+    "referral_bonus_percent": 5.0,
+    "partner_commission_percent": 20.0,
+    "stars_enabled": True,           # 👈 ВКЛ/ВЫКЛ ЗВЁЗД
     "level_bronze_min": 0, "level_bronze_discount": 0,
     "level_silver_min": 500, "level_silver_discount": 3,
     "level_gold_min": 1500, "level_gold_discount": 5,
@@ -405,6 +410,8 @@ DEFAULT_SETTINGS = {
 }
 if not os.path.exists(SETTINGS_FILE): save_settings(DEFAULT_SETTINGS)
 def get_setting(k, d=None): return load_settings().get(k, DEFAULT_SETTINGS.get(k, d))
+def stars_enabled() -> bool: return bool(get_setting("stars_enabled", True))
+
 LEVEL_KEYS = {"bronze": "Бронза", "silver": "Серебро", "gold": "Золото", "platinum": "Платина", "vip": "VIP"}
 
 # ==================== ПОЛЬЗОВАТЕЛИ ====================
@@ -449,7 +456,6 @@ if not os.path.exists(REQUISITES_FILE): save_requisites(DEFAULT_REQUISITES)
 def get_requisites(m): return load_requisites().get(m, DEFAULT_REQUISITES.get(m, "Уточните у продавца"))
 
 # ==================== КАТАЛОГ ====================
-# stock_type: "virtual" | "physical" | "none"
 CATEGORIES = {
     "virtual": {
         "name": f"{pe('phone')} ВИРТУАЛЬНЫЕ НОМЕРА",
@@ -511,7 +517,6 @@ CATEGORIES = {
     },
 }
 
-# Пакеты звёзд
 STAR_PACKAGES = [
     {"count": 13,  "price": 7},
     {"count": 21,  "price": 15},
@@ -619,23 +624,24 @@ async def check_subscription(uid):
 # ==================== КЛАВИАТУРЫ ====================
 def get_main_reply_keyboard():
     b = ReplyKeyboardBuilder()
-    b.row(KeyboardButton(text=f"{EMOJI['cart'][1]} Каталог"), KeyboardButton(text=f"{EMOJI['star'][1]} Купить звёзды"))
-    b.row(KeyboardButton(text=f"{EMOJI['cart'][1]} Мои заказы"), KeyboardButton(text=f"{EMOJI['box'][1]} Мои аккаунты"))
-    b.row(KeyboardButton(text=f"{EMOJI['chat'][1]} Отзывы"), KeyboardButton(text=f"{EMOJI['question'][1]} FAQ"))
-    b.row(KeyboardButton(text=f"{EMOJI['user'][1]} Профиль"), KeyboardButton(text=f"{EMOJI['gift'][1]} Рефералы"))
-    b.row(KeyboardButton(text=f"{EMOJI['ticket'][1]} Промокод"), KeyboardButton(text=f"{EMOJI['megaphone'][1]} Канал"))
+    b.row(KeyboardButton(text=f"{esym('cart')} Каталог"), KeyboardButton(text=f"{esym('star')} Купить звёзды"))
+    b.row(KeyboardButton(text=f"{esym('cart')} Мои заказы"), KeyboardButton(text=f"{esym('box')} Мои аккаунты"))
+    b.row(KeyboardButton(text=f"{esym('chat')} Отзывы"), KeyboardButton(text=f"{esym('question')} FAQ"))
+    b.row(KeyboardButton(text=f"{esym('user')} Профиль"), KeyboardButton(text=f"{esym('gift')} Рефералы"))
+    b.row(KeyboardButton(text=f"{esym('ticket')} Промокод"), KeyboardButton(text=f"{esym('megaphone')} Канал"))
     return b.as_markup(resize_keyboard=True)
 
 def get_admin_reply_keyboard():
     b = ReplyKeyboardBuilder()
-    b.row(KeyboardButton(text=f"{EMOJI['chart'][1]} Статистика"), KeyboardButton(text=f"{EMOJI['cart'][1]} Все заказы"))
-    b.row(KeyboardButton(text=f"{EMOJI['time'][1]} Ожидают"), KeyboardButton(text=f"{EMOJI['check'][1]} Выполненные"))
-    b.row(KeyboardButton(text=f"{EMOJI['box'][1]} Склад"), KeyboardButton(text=f"{EMOJI['money'][1]} Реквизиты"))
-    b.row(KeyboardButton(text=f"{EMOJI['megaphone'][1]} Рассылка"), KeyboardButton(text=f"{EMOJI['user'][1]} Пользователи"))
-    b.row(KeyboardButton(text=f"{EMOJI['chart_up'][1]} Панель"), KeyboardButton(text="🏠 Главное меню"))
-    b.row(KeyboardButton(text=f"{EMOJI['ticket'][1]} Промокоды"), KeyboardButton(text=f"{EMOJI['star'][1]} Уровни"))
-    b.row(KeyboardButton(text=f"{EMOJI['gift'][1]} Рефералы"), KeyboardButton(text=f"{EMOJI['chart'][1]} Аналитика"))
-    b.row(KeyboardButton(text=f"{EMOJI['link'][1]} Источники"), KeyboardButton(text=f"{EMOJI['save'][1]} Бэкапы"))
+    b.row(KeyboardButton(text=f"{esym('chart')} Статистика"), KeyboardButton(text=f"{esym('cart')} Все заказы"))
+    b.row(KeyboardButton(text=f"{esym('time')} Ожидают"), KeyboardButton(text=f"{esym('check')} Выполненные"))
+    b.row(KeyboardButton(text=f"{esym('box')} Склад"), KeyboardButton(text=f"{esym('money')} Реквизиты"))
+    b.row(KeyboardButton(text=f"{esym('megaphone')} Рассылка"), KeyboardButton(text=f"{esym('user')} Пользователи"))
+    b.row(KeyboardButton(text=f"{esym('chart_up')} Панель"), KeyboardButton(text="🏠 Главное меню"))
+    b.row(KeyboardButton(text=f"{esym('ticket')} Промокоды"), KeyboardButton(text=f"{esym('star')} Уровни"))
+    b.row(KeyboardButton(text=f"{esym('gift')} Рефералы"), KeyboardButton(text=f"{esym('chart')} Аналитика"))
+    b.row(KeyboardButton(text=f"{esym('link')} Источники"), KeyboardButton(text=f"{esym('save')} Бэкапы"))
+    b.row(KeyboardButton(text=f"{esym('gear')} Настройки"))
     return b.as_markup(resize_keyboard=True)
 
 def subscribe_keyboard():
@@ -662,6 +668,10 @@ def catalog_keyboard():
     ibtn(kb, "Физические номера", callback_data="cat_physical", icon_key="card", style="primary")
     ibtn(kb, "TikTok", callback_data="cat_tiktok", icon_key="fire", style="primary")
     ibtn(kb, "Discord", callback_data="cat_discord", icon_key="chat", style="primary")
+    if stars_enabled():
+        ibtn(kb, "Telegram Stars", callback_data="cat_stars", icon_key="star", style="primary")
+    else:
+        ibtn(kb, "Звёзды недоступны", callback_data="stars_off", icon_key="cross", style="danger")
     ibtn(kb, "Назад", callback_data="main_menu", icon_key="back", style="danger")
     kb.adjust(1); return kb.as_markup()
 
@@ -768,10 +778,12 @@ def admin_stock_type_keyboard(stock_type):
     ibtn(kb, "Назад", callback_data="admin_stock_menu", icon_key="back", style="danger")
     kb.adjust(1); return kb.as_markup()
 
-def admin_order_card_keyboard(order_id, status, user_id):
+def admin_order_card_keyboard(order_id, status, user_id, is_stars=False):
     kb = InlineKeyboardBuilder()
     if status == "awaiting_payment":
         ibtn(kb, "Подтвердить оплату", callback_data=f"admin_confirm_payment_{order_id}", icon_key="check", style="success")
+    elif status == "paid" and is_stars:
+        ibtn(kb, "Завершить (звёзды)", callback_data=f"admin_complete_stars_{order_id}", icon_key="check", style="success")
     elif status == "completed":
         ibtn(kb, "Возврат", callback_data=f"admin_refund_{order_id}", icon_key="money", style="danger")
     ibtn(kb, "Написать покупателю", callback_data=f"admin_chat_with_user_{order_id}", icon_key="chat")
@@ -811,8 +823,16 @@ def admin_dashboard_keyboard():
     ibtn(kb, "Аналитика", callback_data="admin_analytics_dashboard", icon_key="chart_up")
     ibtn(kb, "Источники", callback_data="admin_traffic_dashboard", icon_key="link")
     ibtn(kb, "Бэкапы", callback_data="admin_backups", icon_key="save")
+    ibtn(kb, "Настройки", callback_data="admin_settings", icon_key="gear")
     ibtn(kb, "Обновить", callback_data="admin_dashboard_refresh", icon_key="refresh")
-    kb.adjust(2,2,2,2,1); return kb.as_markup()
+    kb.adjust(2,2,2,2,2); return kb.as_markup()
+
+def admin_settings_keyboard():
+    kb = InlineKeyboardBuilder()
+    s = stars_enabled()
+    ibtn(kb, f"Звёзды: {'ВКЛ' if s else 'ВЫКЛ'}", callback_data="admin_toggle_stars", icon_key="star", style="success" if s else "danger")
+    ibtn(kb, "Назад", callback_data="admin_dashboard_refresh", icon_key="back", style="danger")
+    kb.adjust(1); return kb.as_markup()
 
 def admin_promo_codes_keyboard():
     kb = InlineKeyboardBuilder()
@@ -916,8 +936,18 @@ async def process_check_sub(callback: types.CallbackQuery):
     else: await callback.answer(f"{pe('cross')} Не подписались!", show_alert=True)
 
 # ==================== ЗВЁЗДЫ ====================
-@dp.message(F.from_user.id != ADMIN_ID, F.text == "⭐ Купить звёзды")
+@dp.callback_query(F.data == "stars_off")
+async def stars_off(callback: types.CallbackQuery):
+    await callback.answer(f"{pe('cross')} Звёзды временно недоступны", show_alert=True)
+
 @dp.callback_query(F.data == "menu_stars")
+async def stars_menu_btn(event):
+    if not stars_enabled():
+        if isinstance(event, types.CallbackQuery):
+            await event.answer(f"{pe('cross')} Звёзды временно недоступны", show_alert=True); return
+        return await event.answer(f"{pe('cross')} Звёзды временно недоступны")
+    await stars_menu(event)
+
 async def stars_menu(event):
     if isinstance(event, types.CallbackQuery): await event.answer(); target = event.message
     else: target = event
@@ -932,8 +962,7 @@ async def stars_menu(event):
 @dp.callback_query(F.data.startswith("starpkg_"))
 async def star_pkg_selected(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
-    try:
-        count = int(callback.data.replace("starpkg_", ""))
+    try: count = int(callback.data.replace("starpkg_", ""))
     except: return
     pkg = next((p for p in STAR_PACKAGES if p["count"] == count), None)
     if not pkg: return await callback.answer(f"{pe('cross')} Не найдено", show_alert=True)
@@ -991,7 +1020,7 @@ async def star_confirm(callback: types.CallbackQuery, state: FSMContext):
             f"🆔 <code>{callback.from_user.id}</code>\n"
             f"{pe('star')} Звёзды: <b>{count} ⭐</b>\n"
             f"{pe('money')} Сумма: <b>{price} ₴</b>\n\n"
-            f"Подтвердите оплату — потом отправьте звёзды подарком в ЛС",
+            f"1. Подтвердите оплату\n2. Отправьте звёзды подарком\n3. Нажмите «Завершить»",
             reply_markup=InlineKeyboardBuilder().button(
                 text="📋 Открыть заказ", callback_data=f"admin_order_detail_{short_id}").as_markup())
     except Exception as e: logger.error(f"Star admin notify: {e}")
@@ -1005,8 +1034,39 @@ async def star_confirm(callback: types.CallbackQuery, state: FSMContext):
         reply_markup=awaiting_payment_keyboard(short_id))
     await state.clear()
 
+# ==================== АДМИН: НАСТРОЙКИ ====================
+@dp.message(F.from_user.id == ADMIN_ID, F.text.contains("Настройки"))
+async def admin_settings_menu(message: types.Message):
+    s = stars_enabled()
+    text = (
+        f"{pe('gear')} <b>НАСТРОЙКИ</b>\n\n"
+        f"{pe('star')} Звёзды: <b>{'ВКЛ' if s else 'ВЫКЛ'}</b>"
+    )
+    await message.answer(text, reply_markup=admin_settings_keyboard())
+
+@dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_settings")
+async def admin_settings_cb(callback: types.CallbackQuery):
+    await callback.answer()
+    s = stars_enabled()
+    text = (
+        f"{pe('gear')} <b>НАСТРОЙКИ</b>\n\n"
+        f"{pe('star')} Звёзды: <b>{'ВКЛ' if s else 'ВЫКЛ'}</b>"
+    )
+    try: await callback.message.edit_text(text, reply_markup=admin_settings_keyboard())
+    except: await callback.message.answer(text, reply_markup=admin_settings_keyboard())
+
+@dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_toggle_stars")
+async def admin_toggle_stars(callback: types.CallbackQuery):
+    await callback.answer()
+    s = load_settings()
+    new = not bool(s.get("stars_enabled", True))
+    s["stars_enabled"] = new
+    save_settings(s)
+    await callback.answer(f"{pe('check')} Звёзды {'ВКЛ' if new else 'ВЫКЛ'}", show_alert=True)
+    await admin_settings_cb(callback)
+
 # ==================== АДМИН: СКЛАД ====================
-@dp.message(F.from_user.id == ADMIN_ID, F.text == "📦 Склад")
+@dp.message(F.from_user.id == ADMIN_ID, F.text.contains("Склад"))
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_stock_menu")
 async def admin_stock_menu(event):
     if isinstance(event, types.CallbackQuery): await event.answer(); target = event.message; edit = True
@@ -1134,7 +1194,7 @@ async def admin_list_accounts(callback: types.CallbackQuery):
     await admin_list_by_type(callback)
 
 # ==================== КАТАЛОГ / ЗАКАЗ АККАУНТОВ ====================
-@dp.message(F.from_user.id != ADMIN_ID, F.text == "🛍 Каталог")
+@dp.message(F.from_user.id != ADMIN_ID, F.text.contains("Каталог"))
 async def catalog_kb(message: types.Message, state: FSMContext):
     if not await check_subscription(message.from_user.id):
         return await message.answer(f"{pe('warn')} Подпишитесь!", reply_markup=subscribe_keyboard())
@@ -1162,6 +1222,8 @@ async def show_category(callback: types.CallbackQuery, state: FSMContext):
     cat = callback.data.replace("cat_", "")
     if cat not in CATEGORIES: return
     if cat == "stars":
+        if not stars_enabled():
+            return await callback.answer(f"{pe('cross')} Звёзды недоступны", show_alert=True)
         await stars_menu(callback); return
     try: await callback.message.edit_text(f"{CATEGORIES[cat]['name']}\n\nВыберите товар:", reply_markup=category_products_keyboard(cat))
     except: await callback.message.answer(f"{CATEGORIES[cat]['name']}\n\nВыберите товар:", reply_markup=category_products_keyboard(cat))
@@ -1333,11 +1395,11 @@ async def confirm_order(callback: types.CallbackQuery, state: FSMContext):
     await state.clear()
 
 # ==================== АДМИН: ЗАКАЗЫ ====================
-@dp.message(F.from_user.id == ADMIN_ID, F.text == "📋 Все заказы")
+@dp.message(F.from_user.id == ADMIN_ID, F.text.contains("Все заказы"))
 async def admin_all_orders(message: types.Message): await show_admin_orders_page(message, 0)
-@dp.message(F.from_user.id == ADMIN_ID, F.text == "⏳ Ожидают")
+@dp.message(F.from_user.id == ADMIN_ID, F.text.contains("Ожидают"))
 async def admin_pending(message: types.Message): await show_admin_orders_page(message, 0, "awaiting_payment")
-@dp.message(F.from_user.id == ADMIN_ID, F.text == "✅ Выполненные")
+@dp.message(F.from_user.id == ADMIN_ID, F.text.contains("Выполненные"))
 async def admin_completed(message: types.Message): await show_admin_orders_page(message, 0, "completed")
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data.startswith("admin_page_"))
@@ -1390,9 +1452,13 @@ async def admin_order_detail(callback: types.CallbackQuery):
             f"{pe('pin')} {e} {st}\n")
     if order.get("phone"): text += f"{pe('phone')} {order['phone']}\n"
     if order.get("used_promo_code"): text += f"{pe('ticket')} Промокод: <code>{order['used_promo_code']}</code>\n"
-    if order.get("is_stars"): text += f"\n{pe('star')} <b>Это заказ на звёзды</b>\nПосле подтверждения оплаты отправьте звёзды подарком в ЛС."
-    try: await callback.message.edit_text(text, reply_markup=admin_order_card_keyboard(rk, order["status"], order["user_id"]))
-    except: await callback.message.answer(text, reply_markup=admin_order_card_keyboard(rk, order["status"], order["user_id"]))
+    if order.get("is_stars"):
+        text += f"\n{pe('star')} <b>Это заказ на звёзды</b>\n"
+        if order["status"] == "paid":
+            text += f"Отправьте звёзды подарком в ЛС @{order.get('username')}\nЗатем нажмите «Завершить»."
+    is_stars = bool(order.get("is_stars"))
+    try: await callback.message.edit_text(text, reply_markup=admin_order_card_keyboard(rk, order["status"], order["user_id"], is_stars))
+    except: await callback.message.answer(text, reply_markup=admin_order_card_keyboard(rk, order["status"], order["user_id"], is_stars))
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_back_to_list")
 async def admin_back_to_list(callback: types.CallbackQuery):
@@ -1413,11 +1479,28 @@ async def admin_confirm_payment(callback: types.CallbackQuery):
             f"{pe('check')} Оплата подтверждена!\n\n"
             f"{pe('star')} Это заказ на звёзды.\n"
             f"Отправьте {order['product']} подарком в ЛС @{order.get('username')}\n"
-            f"Затем нажмите «Завершить».",
-            reply_markup=admin_order_card_keyboard(rk, "paid", order["user_id"]))
+            f"Затем нажмите «Завершить (звёзды)».",
+            reply_markup=admin_order_card_keyboard(rk, "paid", order["user_id"], is_stars=True))
     else:
         await callback.message.edit_text(f"{pe('check')} Оплата подтверждена. Выдаю аккаунт...")
         await deliver_to_user(order, rk)
+
+@dp.callback_query(F.from_user.id == ADMIN_ID, F.data.startswith("admin_complete_stars_"))
+async def admin_complete_stars(callback: types.CallbackQuery):
+    await callback.answer()
+    oid = callback.data.replace("admin_complete_stars_", "")
+    orders = load_orders(); rk = find_order_key(orders, oid)
+    if not rk: return
+    order = orders[rk]
+    order["status"] = "completed"; order["completed_at"] = datetime.now().isoformat()
+    save_orders(orders)
+    try:
+        await bot.send_message(order["user_id"],
+            f"{pe('check')} <b>Звёзды отправлены!</b>\n\n"
+            f"{pe('star')} {order['product']}\n\nСпасибо за покупку!",
+            reply_markup=user_order_actions_keyboard(rk))
+    except Exception as e: logger.error(f"Complete stars notify: {e}")
+    await admin_order_detail(callback)
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data.startswith("admin_reject_"))
 async def admin_reject(callback: types.CallbackQuery):
@@ -1483,19 +1566,6 @@ async def deliver_to_user(order, order_key):
         except: pass
     except Exception as e: logger.error(f"Deliver: {e}")
 
-@dp.callback_query(F.from_user.id == ADMIN_ID, F.data.startswith("admin_complete_stars_"))
-async def admin_complete_stars(callback: types.CallbackQuery):
-    await callback.answer()
-    oid = callback.data.replace("admin_complete_stars_", "")
-    orders = load_orders(); rk = find_order_key(orders, oid)
-    if not rk: return
-    order = orders[rk]; order["status"] = "completed"; order["completed_at"] = datetime.now().isoformat()
-    save_orders(orders)
-    try:
-        await bot.send_message(order["user_id"], f"{pe('check')} <b>Звёзды отправлены!</b>\n\n{pe('star')} {order['product']}\n\nСпасибо за покупку!", reply_markup=user_order_actions_keyboard(rk))
-    except: pass
-    await admin_order_detail(callback)
-
 async def process_partner_commission(promo_code, order_total, order_key):
     try: order_total = float(order_total)
     except: return
@@ -1524,7 +1594,7 @@ async def process_partner_commission(promo_code, order_total, order_key):
     except: pass
 
 # ==================== РЕКВИЗИТЫ / РАССЫЛКА ====================
-@dp.message(F.from_user.id == ADMIN_ID, F.text == "💰 Реквизиты")
+@dp.message(F.from_user.id == ADMIN_ID, F.text.contains("Реквизиты"))
 async def admin_requisites(message: types.Message):
     r = load_requisites()
     text = f"{pe('money')} <b>РЕКВИЗИТЫ:</b>\n\n{pe('card')} Гривны:\n{r.get('uah','—')}\n\n{pe('gift')} Подарок:\n{r.get('gift','—')}"
@@ -1546,7 +1616,7 @@ async def save_req(message: types.Message, state: FSMContext):
     await message.answer(f"{pe('check')} Обновлено!", reply_markup=get_admin_reply_keyboard())
     await state.clear()
 
-@dp.message(F.from_user.id == ADMIN_ID, F.text == "📢 Рассылка")
+@dp.message(F.from_user.id == ADMIN_ID, F.text.contains("Рассылка"))
 async def admin_broadcast_start(message: types.Message, state: FSMContext):
     users = load_users()
     if not users: return await message.answer(f"{pe('cross')} Нет пользователей")
@@ -1580,7 +1650,7 @@ async def cancel_handler(message: types.Message, state: FSMContext):
     await message.answer(f"{pe('cross')} Отменено", reply_markup=kb)
 
 # ==================== СТАТИСТИКА / ПАНЕЛЬ ====================
-@dp.message(F.from_user.id == ADMIN_ID, F.text == "📊 Статистика")
+@dp.message(F.from_user.id == ADMIN_ID, F.text.contains("Статистика"))
 async def admin_stats(message: types.Message):
     orders = load_orders(); users = load_users(); sc = {}; rev = 0
     for o in orders.values():
@@ -1595,7 +1665,7 @@ async def admin_stats(message: types.Message):
             f"{pe('box')} Склад: {sum(stock_count().values())}")
     await message.answer(text, reply_markup=get_admin_reply_keyboard())
 
-@dp.message(F.from_user.id == ADMIN_ID, F.text == "📈 Панель")
+@dp.message(F.from_user.id == ADMIN_ID, F.text.contains("Панель"))
 async def admin_panel(message: types.Message): await show_dashboard(message)
 
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_dashboard_refresh")
@@ -1619,6 +1689,7 @@ async def show_dashboard(target, edit=False):
                 except: pass
     nt = sum(1 for u in users.values() if u.get("first_seen") and datetime.fromisoformat(u["first_seen"]) >= today)
     v = stock_count("virtual"); p = stock_count("physical")
+    stars_status = "ВКЛ" if stars_enabled() else "ВЫКЛ"
     text = (f"{pe('chart')} <b>ПАНЕЛЬ</b>\n\n"
             f"{pe('money')} Сегодня: <b>{rt:.2f}₴</b>\n"
             f"{pe('money')} Всего: <b>{tr:.2f}₴</b>\n\n"
@@ -1626,6 +1697,7 @@ async def show_dashboard(target, edit=False):
             f"{pe('cart')} Выполнено: {completed}/{len(orders)}\n"
             f"{pe('phone')} Вирт. склад: {sum(v.values())}\n"
             f"{pe('card')} Физ. склад: {sum(p.values())}\n"
+            f"{pe('star')} Звёзды: <b>{stars_status}</b>\n"
             f"{pe('user')} Юзеров: {len(users)}")
     kb = admin_dashboard_keyboard()
     if edit:
@@ -1634,7 +1706,7 @@ async def show_dashboard(target, edit=False):
     else: await target.answer(text, reply_markup=kb)
 
 # ==================== УРОВНИ ====================
-@dp.message(F.from_user.id == ADMIN_ID, F.text == "⭐ Уровни")
+@dp.message(F.from_user.id == ADMIN_ID, F.text.contains("Уровни"))
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_levels_dashboard")
 async def admin_levels(event):
     if isinstance(event, types.CallbackQuery): await event.answer(); target = event.message; edit = True
@@ -1697,7 +1769,7 @@ async def save_lvl_disc(message: types.Message, state: FSMContext):
     await message.answer(f"{pe('check')} {v}%", reply_markup=get_admin_reply_keyboard()); await state.clear()
 
 # ==================== АНАЛИТИКА / ИСТОЧНИКИ ====================
-@dp.message(F.from_user.id == ADMIN_ID, F.text == "📊 Аналитика")
+@dp.message(F.from_user.id == ADMIN_ID, F.text.contains("Аналитика"))
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_analytics_dashboard")
 async def admin_analytics(event):
     if isinstance(event, types.CallbackQuery): await event.answer(); target = event.message; edit = True
@@ -1758,7 +1830,7 @@ async def an_country(callback: types.CallbackQuery):
     b = InlineKeyboardBuilder(); ibtn(b, "Назад", callback_data="admin_analytics_dashboard", icon_key="back", style="danger")
     await callback.message.edit_text(text, reply_markup=b.as_markup())
 
-@dp.message(F.from_user.id == ADMIN_ID, F.text == "🔗 Источники")
+@dp.message(F.from_user.id == ADMIN_ID, F.text.contains("Источники"))
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_traffic_dashboard")
 async def admin_traffic(event):
     if isinstance(event, types.CallbackQuery): await event.answer(); target = event.message; edit = True
@@ -1774,7 +1846,7 @@ async def admin_traffic(event):
     else: await target.answer(text, reply_markup=b.as_markup())
 
 # ==================== РЕФЕРАЛЫ / ПОЛЬЗОВАТЕЛИ ====================
-@dp.message(F.from_user.id == ADMIN_ID, F.text == "👥 Рефералы")
+@dp.message(F.from_user.id == ADMIN_ID, F.text.contains("Рефералы"))
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_referrals_dashboard")
 async def admin_refs(event):
     if isinstance(event, types.CallbackQuery): await event.answer(); target = event.message; edit = True
@@ -1804,7 +1876,7 @@ async def save_ref_bonus(message: types.Message, state: FSMContext):
     s = load_settings(); s["referral_bonus_percent"] = v; save_settings(s)
     await message.answer(f"{pe('check')} {v}%", reply_markup=get_admin_reply_keyboard()); await state.clear()
 
-@dp.message(F.from_user.id == ADMIN_ID, F.text == "👤 Пользователи")
+@dp.message(F.from_user.id == ADMIN_ID, F.text.contains("Пользователи"))
 async def admin_users(message: types.Message):
     u = load_users()
     if not u: return await message.answer(f"{pe('cart')} Нет", reply_markup=get_admin_reply_keyboard())
@@ -1818,7 +1890,7 @@ async def admin_users(message: types.Message):
 async def admin_main(message: types.Message): await message.answer("🏠", reply_markup=get_admin_reply_keyboard())
 
 # ==================== БЭКАПЫ ====================
-@dp.message(F.from_user.id == ADMIN_ID, F.text == "💾 Бэкапы")
+@dp.message(F.from_user.id == ADMIN_ID, F.text.contains("Бэкапы"))
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_backups")
 async def admin_backups(event):
     if isinstance(event, types.CallbackQuery): await event.answer(); target = event.message; edit = True
@@ -1847,7 +1919,7 @@ async def download_backups(callback: types.CallbackQuery):
     await callback.message.answer_document(FSInputFile("backup_all.b64"), caption=f"{pe('save')} BACKUP_ALL_B64")
 
 # ==================== ПРОМОКОДЫ ====================
-@dp.message(F.from_user.id == ADMIN_ID, F.text == "🎟 Промокоды")
+@dp.message(F.from_user.id == ADMIN_ID, F.text.contains("Промокоды"))
 @dp.callback_query(F.from_user.id == ADMIN_ID, F.data == "admin_promo_dashboard")
 async def admin_promo(event):
     if isinstance(event, types.CallbackQuery): await event.answer(); target = event.message; edit = True
@@ -1987,7 +2059,7 @@ async def delp(callback: types.CallbackQuery):
     await callback.answer(f"{pe('trash')} Удалён", show_alert=True); await admin_promo(callback)
 
 # ==================== ОТЗЫВЫ ====================
-@dp.message(F.from_user.id != ADMIN_ID, F.text == "💬 Отзывы")
+@dp.message(F.from_user.id != ADMIN_ID, F.text.contains("Отзывы"))
 @dp.callback_query(F.data == "menu_reviews")
 async def open_reviews(event):
     if isinstance(event, types.CallbackQuery): await event.answer(); target = event.message
@@ -2077,7 +2149,7 @@ async def reject_review(callback: types.CallbackQuery):
         except: pass
 
 # ==================== МОИ ЗАКАЗЫ / АККАУНТЫ ====================
-@dp.message(F.from_user.id != ADMIN_ID, F.text == "📋 Мои заказы")
+@dp.message(F.from_user.id != ADMIN_ID, F.text.contains("Мои заказы"))
 @dp.callback_query(F.data == "my_orders")
 async def my_orders(event):
     if isinstance(event, types.CallbackQuery): await event.answer(); uid = event.from_user.id; target = event.message
@@ -2128,7 +2200,7 @@ async def order_detail(callback: types.CallbackQuery):
     try: await callback.message.edit_text(text, reply_markup=kb)
     except: await callback.message.answer(text, reply_markup=kb)
 
-@dp.message(F.from_user.id != ADMIN_ID, F.text == "📦 Мои аккаунты")
+@dp.message(F.from_user.id != ADMIN_ID, F.text.contains("Мои аккаунты"))
 @dp.callback_query(F.data == "my_accounts")
 async def my_accounts(event):
     if isinstance(event, types.CallbackQuery): await event.answer(); uid = event.from_user.id; target = event.message
@@ -2198,7 +2270,7 @@ async def user_refund(callback: types.CallbackQuery):
     await callback.message.answer(f"{pe('money')} Запрос отправлен. @MaskYoY")
 
 # ==================== ПРОФИЛЬ / РЕФЕРАЛЫ / ПРОМО / FAQ / КАНАЛ ====================
-@dp.message(F.from_user.id != ADMIN_ID, F.text == "👤 Профиль")
+@dp.message(F.from_user.id != ADMIN_ID, F.text.contains("Профиль"))
 async def profile_kb(message: types.Message): await show_profile(message)
 
 @dp.callback_query(F.data == "profile_menu")
@@ -2223,7 +2295,7 @@ async def show_profile(target, uo=None):
     try: await target.edit_text(text, reply_markup=profile_keyboard())
     except: await target.answer(text, reply_markup=profile_keyboard())
 
-@dp.message(F.from_user.id != ADMIN_ID, F.text == "👥 Рефералы")
+@dp.message(F.from_user.id != ADMIN_ID, F.text.contains("Рефералы"))
 @dp.callback_query(F.data == "referral_menu")
 async def ref_menu(event):
     if isinstance(event, types.CallbackQuery): await event.answer(); uid = event.from_user.id; target = event.message
@@ -2259,7 +2331,7 @@ async def ref_stats(callback: types.CallbackQuery):
     b = InlineKeyboardBuilder(); ibtn(b, "Назад", callback_data="referral_menu", icon_key="back", style="danger")
     await callback.message.edit_text(text, reply_markup=b.as_markup())
 
-@dp.message(F.from_user.id != ADMIN_ID, F.text == "🎟 Промокод")
+@dp.message(F.from_user.id != ADMIN_ID, F.text.contains("Промокод"))
 @dp.callback_query(F.data == "promo_menu")
 async def promo_menu_ev(event, state: FSMContext = None):
     if isinstance(event, types.CallbackQuery): await event.answer(); target = event.message
@@ -2284,10 +2356,10 @@ async def check_promo(message: types.Message, state: FSMContext):
     await message.answer(f"{pe('check')} Промокод <code>{code}</code> принят!", reply_markup=main_menu_keyboard())
     await state.clear()
 
-@dp.message(F.from_user.id != ADMIN_ID, F.text == "❓ FAQ")
+@dp.message(F.from_user.id != ADMIN_ID, F.text.contains("FAQ"))
 async def faq(message: types.Message): await message.answer(FAQ_TEXT, reply_markup=get_main_reply_keyboard())
 
-@dp.message(F.from_user.id != ADMIN_ID, F.text == "📢 Канал")
+@dp.message(F.from_user.id != ADMIN_ID, F.text.contains("Канал"))
 async def channel(message: types.Message):
     b = InlineKeyboardBuilder()
     ibtn(b, "Перейти", url="http://t.me/owerpass_store", icon_key="megaphone", style="primary")
@@ -2340,7 +2412,7 @@ async def relay_admin(message: types.Message):
 async def on_err(event): logger.error(f"Err: {event.exception}"); return True
 
 async def main():
-    print("="*50); print("OverPass Store Bot v7 (split stock + stars shop)"); print("="*50)
+    print("="*50); print("OverPass Store Bot v8 (fixed handlers + stars toggle)"); print("="*50)
     restore_from_env()
     await bot.delete_webhook(drop_pending_updates=True)
     await asyncio.sleep(1)

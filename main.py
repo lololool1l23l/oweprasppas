@@ -1917,7 +1917,7 @@ async def a_detail(cb: types.CallbackQuery):
         txt += f"{pe('money')} Комиссия: {o['promo_owner_commission']:.2f} ₴\n"
         if o.get("promo_owner_id"):
             owner = load_users().get(str(o["promo_owner_id"]), {})
-            txt += f"👤 Владелец: @{owner.get('username', f'ID:{o[\"promo_owner_id\"]}')}\n"
+            txt += "👤 Владелец: @{}\n".format(owner.get("username", "ID:" + str(o["promo_owner_id"])))
     txt += f"\nСтатус: {emoji} {stat}"
     try: await cb.message.edit_text(txt, reply_markup=admin_order_management_keyboard(rk, o["status"]))
     except Exception: await cb.message.answer(txt, reply_markup=admin_order_management_keyboard(rk, o["status"]))

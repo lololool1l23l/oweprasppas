@@ -746,19 +746,43 @@ login_notified = set()
 
 async def watch_codes(c, n, user_id, order_key=None):
     key = "%s:%s" % (c, n)
+    
+    # Если уже есть активный наблюдатель для этой сессии, не создаем новый
+    if key in active_watchers and active_watchers[key] is not None:
+        return
+        
     watcher_users[key] = user_id
     if order_key:
         watcher_orders[key] = order_key
-    if key in active_watchers:
-        return
-    active_watchers[key] = None
+        
+    active_watchers[key] = "starting" # Статус запуска
+
+    # Используем путь к файлу наблюдателя, который создается при загрузке
     sess = watcher_path(c, n)
+    
+    # Если файла наблюдателя нет, пробуем создать копию из основного
     if not os.path.exists(sess):
-        sess = session_path(c, n)
-    if not os.path.exists(sess):
-        active_watchers.pop(key, None)
-        return
+        main_sess = session_path(c, n)
+        if os.path.exists(main_sess):
+            try:
+                shutil.copy2(main_sess, sess)
+                # Также копируем journal файл, если он есть
+                journal_src = main_sess + "-journal"
+                journal_dst = sess + "-journal"
+                if os.path.exists(journal_src):
+                    shutil.copy2(journal_src, journal_dst)
+            except Exception as e:
+                logger.error("Copy session for watcher: %s", e)
+                active_watchers.pop(key, None)
+                return
+        else:
+            active_watchers.pop(key, None)
+            return
+
+    # Создаем клиент на основе копии (_watcher.session)
+    # Важно: используем уникальное имя сессии, чтобы не конфликтовать
     client = TelegramClient(sess.replace(".session", ""), API_ID, API_HASH)
+    
     try:
         await client.connect()
         if not await client.is_user_authorized():
@@ -767,6 +791,7 @@ async def watch_codes(c, n, user_id, order_key=None):
             except Exception:
                 pass
             return
+
         meta = load_meta(c, n) or {}
 
         @client.on(events.NewMessage(from_users=[777000]))
@@ -775,17 +800,21 @@ async def watch_codes(c, n, user_id, order_key=None):
             target = watcher_users.get(key)
             if not target:
                 return
+            
+            # Ищем 5-значный код
             m = re.search(r"\b(\d{5})\b", text)
             if m:
-                msg = "%s <b>КОД ПОДТВЕРЖДЕНИЯ</b>\n\n<code>%s</code>\n\n" % (pe("key"), m.group(1))
+                msg = "%s <b>КОД ПОДТВЕРЖДЕНИЯ</b>\n<code>%s</code>\n" % (pe("key"), m.group(1))
                 if meta.get("password"):
-                    msg += "%s <b>Пароль (2FA):</b> <code>%s</code>\n\n" % (pe("lock"), esc(meta["password"]))
+                    msg += "%s <b>Пароль (2FA):</b> <code>%s</code>\n" % (pe("lock"), esc(meta["password"]))
                 msg += "Введите код в Telegram сейчас же!"
                 try:
                     await bot.send_message(target, msg)
                 except Exception as e:
                     logger.error("Send code: %s", e)
                 return
+
+            # Уведомление об успешном входе
             low = text.lower()
             if any(s in low for s in ["новый вход", "new login", "вы вошли", "you have logged in",
                                       "новое устройство", "new device", "новый вхід"]):
@@ -793,33 +822,45 @@ async def watch_codes(c, n, user_id, order_key=None):
                 if nk in login_notified:
                     return
                 login_notified.add(nk)
+                
                 ok_key = watcher_orders.get(key)
                 reviewed = False
                 if ok_key:
                     _, oo = get_order(ok_key)
                     reviewed = bool(oo and oo.get("reviewed"))
+                
                 try:
                     kb = InlineKeyboardBuilder()
                     if ok_key and not reviewed:
                         ibtn(kb, "Оставить отзыв", callback_data="leave_review_%s" % ok_key, icon_key="star", style="success")
                     ibtn(kb, "Мои аккаунты", callback_data="my_accounts", icon_key="box")
                     kb.adjust(1)
+                    
                     await bot.send_message(
                         target,
-                        "%s <b>ВХОД ПОДТВЕРЖДЁН!</b>\n\n%s Сессия: <code>%s</code>\n%s Аккаунт успешно вошёл.\n\n"
+                        "%s <b>ВХОД ПОДТВЕРЖДЁН!</b>\n"
+                        "%s Сессия: <code>%s</code>\n"
+                        "%s Аккаунт успешно вошёл.\n"
                         "Пожалуйста, оставь отзыв!" % (pe("check"), pe("phone"), esc(n), pe("sparkle")),
                         reply_markup=kb.as_markup())
                 except Exception as e:
                     logger.error("Login notify: %s", e)
+                
                 try:
                     await bot.send_message(
-                        ADMIN_ID, "%s <b>ПОКУПАТЕЛЬ ВОШЁЛ</b>\n\n%s ID: <code>%s</code>\n%s Сессия: <code>%s</code>\n🆔 Заказ: <code>%s</code>"
+                        ADMIN_ID, "%s <b>ПОКУПАТЕЛЬ ВОШЁЛ</b>\n"
+                        "%s ID: <code>%s</code>\n"
+                        "%s Сессия: <code>%s</code>\n"
+                        "🆔 Заказ: <code>%s</code>"
                         % (pe("check"), pe("user"), target, pe("phone"), esc(n), esc(ok_key or "—")))
                 except Exception:
                     pass
 
         active_watchers[key] = client
+        # Запускаем слушатель событий, но не блокируем основной поток навсегда, 
+        # так как Telethon сам управляет циклом событий внутри start_polling бота
         await client.run_until_disconnected()
+        
     except Exception as e:
         logger.error("Watcher %s: %s", key, e)
     finally:
@@ -1704,28 +1745,60 @@ async def deliver_order(rk):
     uid = o["user_id"]
     items = order_items(o)
     all_ok = True
+    
+    # Обновляем заказ в базе, чтобы зафиксировать статус выдачи
+    orders = load_orders()
+    
     for i, it in enumerate(items):
         if it.get("delivered"):
             continue
+            
         c, n, phone = it["country"], it["session_name"], it.get("phone")
-        sess = session_path(c, n)
-        if not os.path.exists(sess):
+        
+        # Ищем файл сессии. Приоритет: основной файл -> файл наблюдателя
+        sess_file = None
+        possible_paths = [
+            session_path(c, n),
+            watcher_path(c, n),
+            os.path.join(country_dir(c), f"{n}.session"),
+            os.path.join(country_dir(c), f"{phone}.session"),
+        ]
+        
+        for path in possible_paths:
+            if os.path.exists(path):
+                sess_file = path
+                break
+                
+        if not sess_file:
             all_ok = False
             try:
-                await bot.send_message(ADMIN_ID, "%s Файл сессии не найден: %s/%s (заказ %s)" % (pe("cross"), c, esc(n), rk))
+                await bot.send_message(ADMIN_ID, "%s Файл сессии не найден для {c}/{n} (заказ {rk})".format(c=c, n=n, rk=rk))
                 await bot.send_message(uid, "%s Файл не найден, продавец уже уведомлён. %s" % (pe("cross"), SELLER))
             except Exception:
                 pass
             continue
+
         meta = load_meta(c, n) or {}
         pwd = ("\n%s <b>Пароль:</b> <code>%s</code>\n" % (pe("lock"), esc(meta["password"]))) if meta.get("password") else ""
+        
         try:
+            # Отправляем файл как есть, не модифицируя его
+            caption = ("%s <b>ВАШ АККАУНТ</b>\n"
+            "%s Страна: %s\n"
+            "%s Номер: <code>%s</code>\n"
+            "%s\n"
+            "<b>Как войти:</b>\n"
+            "1. Войдите в Telegram по номеру выше\n"
+            "2. Нажмите «Запросить код»\n"
+            "<b>%s Код придёт сюда!</b>"
+            % (pe("sparkle"), pe("globe"), country_name(c), pe("phone"), esc(phone), pwd, pe("key")))
+            
             await bot.send_document(
-                chat_id=uid, document=FSInputFile(sess, filename="%s_%s.session" % (c, phone)),
-                caption=("%s <b>ВАШ АККАУНТ</b>\n\n%s Страна: %s\n%s Номер: <code>%s</code>\n%s\n<b>Как войти:</b>\n"
-                         "1. Войдите в Telegram по номеру выше\n2. Нажмите «Запросить код»\n\n<b>%s Код придёт сюда!</b>"
-                         % (pe("sparkle"), pe("globe"), country_name(c), pe("phone"), esc(phone), pwd, pe("key"))),
-                reply_markup=user_order_actions_keyboard(rk, o, idx=i))
+                chat_id=uid, 
+                document=FSInputFile(sess_file, filename="%s_%s.session" % (c, phone)),
+                caption=caption,
+                reply_markup=user_order_actions_keyboard(rk, o, idx=i)
+            )
         except Exception as e:
             all_ok = False
             logger.error("Deliver %s: %s", rk, e)
@@ -1734,20 +1807,28 @@ async def deliver_order(rk):
             except Exception:
                 pass
             continue
+        
+        # Помечаем как выданный
         mark_sold(c, n, uid)
         it["delivered"] = True
-        asyncio.create_task(start_code_watcher(c, n, uid, rk))
-    orders = load_orders()
+        
+        # Запускаем наблюдателя только если он еще не запущен
+        key = "%s:%s" % (c, n)
+        if key not in active_watchers:
+            asyncio.create_task(start_code_watcher(c, n, uid, rk))
+
+    # Сохраняем обновленный статус items
     if rk in orders:
-        # сохраняем флаги delivered, не затирая другие поля
         orders[rk]["items"] = items
         save_orders(orders)
+        
     if all_ok and items:
         await complete_order(rk)
         try:
             await bot.send_message(ADMIN_ID, "%s <b>АККАУНТ ВЫДАН</b> (%s)\n%s <code>%s</code>" % (pe("check"), rk, pe("user"), uid))
         except Exception:
             pass
+            
     return all_ok
 
 
